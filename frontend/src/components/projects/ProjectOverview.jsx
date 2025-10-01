@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useProjectStore } from '../../stores/useProjectStore'
 import { StatCard } from '../ui/StatCard'
+import { DocumentTextIcon, ChartBarIcon } from '@heroicons/react/24/outline'
 
 export const ProjectOverview = ({ projectId }) => {
   const { documents, testSuites, fetchDocuments, fetchTraceabilityMatrix, traceabilityMatrix } = useProjectStore()

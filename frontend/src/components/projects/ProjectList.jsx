@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useProjectStore } from '../../stores/useProjectStore'
 import { PlusIcon } from '@heroicons/react/24/outline'
+import { ProjectCard } from './ProjectCard'
 
 export const ProjectList = () => {
   const { projects, fetchProjects, createProject, loading } = useProjectStore()

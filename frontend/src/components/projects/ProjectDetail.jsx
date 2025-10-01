@@ -4,6 +4,7 @@ import { useProjectStore } from '../../stores/useProjectStore'
 import { DocumentManager } from '../documents/DocumentManager'
 import { TestSuiteView } from '../test-cases/TestSuiteView'
 import { ProjectOverview } from './ProjectOverview'
+import { ProjectSettings } from './ProjectSettings'
 import {
   DocumentTextIcon,
   ChartBarIcon,

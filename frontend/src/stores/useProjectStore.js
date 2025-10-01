@@ -23,7 +23,8 @@ export const useProjectStore = create(
     fetchProjects: async () => {
       set({ loading: true })
       try {
-        const projects = await projectService.getProjects()
+        const projects_data = await projectService.getProjects()
+        const projects = projects_data.data
         set({ projects, loading: false })
       } catch (error) {
         set({ error: error.message, loading: false })
