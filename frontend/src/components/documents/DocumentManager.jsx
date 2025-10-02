@@ -3,8 +3,8 @@ import { useProjectStore } from '../../stores/useProjectStore'
 import { DocumentUpload } from './DocumentUpload'
 import { DocumentList } from './DocumentList'
 import { DocumentProcessingStatus } from './DocumentProcessingStatus'
-import { ArrowUpTrayIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/react/24/outline'
-
+import { ArrowUpTrayIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { motion } from 'framer-motion'
 
 export const DocumentManager = ({ projectId }) => {
   const { documents, fetchDocuments, loading } = useProjectStore()
@@ -17,49 +17,54 @@ export const DocumentManager = ({ projectId }) => {
     }
   }, [projectId, fetchDocuments])
 
-  const handleGenerateTests = async (documentId) => {
-    try {
-      const { generateTestCases } = useProjectStore.getState()
-      await generateTestCases(documentId)
-      // Show success message or redirect to test suite
-    } catch (error) {
-      console.error('Failed to generate tests:', error)
-    }
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex justify-between items-center"
+      >
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Document Management</h2>
-          <p className="text-gray-600 mt-2">
-            Upload and manage your Business Requirements Documents (BRDs)
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            Document Intelligence
+          </h2>
+          <p className="text-gray-300 mt-2">
+            Transform your BRDs into actionable test cases with AI-powered analysis
           </p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setShowUpload(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          className="inline-flex items-center px-6 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:shadow-blue-500/25 hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
         >
-          <ArrowUpTrayIcon className="h-4 w-4 mr-2" />
+          <ArrowUpTrayIcon className="h-5 w-5 mr-2" />
           Upload Document
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Upload Section */}
       {showUpload && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Upload New Document</h3>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+          className="glass rounded-2xl border border-white/10 p-6 backdrop-blur-xl"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-white">Upload New Document</h3>
             <button
               onClick={() => setShowUpload(false)}
-              className="text-gray-400 hover:text-gray-500"
+              className="text-gray-400 hover:text-white transition-colors"
             >
-              <XMarkIcon className="h-5 w-5" />
+              <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
           <DocumentUpload projectId={projectId} />
-        </div>
+        </motion.div>
       )}
 
       {/* Documents List */}

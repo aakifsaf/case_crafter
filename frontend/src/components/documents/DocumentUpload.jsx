@@ -1,6 +1,7 @@
 import { useDropzone } from 'react-dropzone'
 import { useProjectStore } from '../../stores/useProjectStore'
 import { DocumentArrowUpIcon } from '@heroicons/react/24/outline'
+import { motion } from 'framer-motion'
 
 export const DocumentUpload = ({ projectId }) => {
   const { uploadDocument, loading } = useProjectStore()
@@ -25,34 +26,47 @@ export const DocumentUpload = ({ projectId }) => {
   })
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Upload BRD Document</h3>
+    <div className="p-6">
+      <h3 className="text-lg font-medium text-white mb-6">Upload BRD Document</h3>
       
-      <div
+      <motion.div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+        whileHover={{ scale: 1.01 }}
+        className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-300 ${
           isDragActive 
-            ? 'border-blue-400 bg-blue-50' 
-            : 'border-gray-300 hover:border-gray-400'
+            ? 'border-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/25' 
+            : 'border-white/20 hover:border-blue-400/50 hover:bg-white/5'
         } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <input {...getInputProps()} disabled={loading} />
-        <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600">
+        <motion.div
+          animate={isDragActive ? { y: -5 } : { y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <DocumentArrowUpIcon className="mx-auto h-16 w-16 text-blue-400 mb-4" />
+        </motion.div>
+        <p className="mt-2 text-lg font-medium text-white">
           {isDragActive
-            ? 'Drop the BRD file here...'
-            : 'Drag & drop a BRD file, or click to select'}
+            ? 'Drop to analyze your document'
+            : 'Drag & drop your BRD file'}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
-          PDF, DOCX, TXT up to 10MB
+        <p className="text-sm text-gray-300 mt-2">
+          AI-powered analysis for PDF, DOCX, TXT files
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          Max file size: 10MB
         </p>
         {loading && (
-          <div className="mt-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="text-sm text-gray-500 mt-2">Uploading...</p>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6"
+          >
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+            <p className="text-sm text-blue-300 mt-3">Processing with AI...</p>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     </div>
   )
 }
