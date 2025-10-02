@@ -3,7 +3,8 @@ import { useProjectStore } from '../../stores/useProjectStore'
 import { DocumentUpload } from './DocumentUpload'
 import { DocumentList } from './DocumentList'
 import { DocumentProcessingStatus } from './DocumentProcessingStatus'
-import { ArrowUpTrayIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
+import { ArrowUpTrayIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/react/24/outline'
+
 
 export const DocumentManager = ({ projectId }) => {
   const { documents, fetchDocuments, loading } = useProjectStore()
