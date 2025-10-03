@@ -29,8 +29,8 @@ export const ProjectDetail = () => {
   const [activeTab, setActiveTab] = useState('')
 
   useEffect(() => {
-    const loadProject = async (user_id) => {
-      await fetchProjects(user_id)
+    const loadProject = async () => {
+      await fetchProjects()
       const project = useProjectStore.getState().projects.find(p => p.id === parseInt(projectId))
       console.log('Loaded project:', project)
       if (project) {
@@ -38,7 +38,7 @@ export const ProjectDetail = () => {
         console.log('Current project set to:', currentProject)
       }
     }
-    loadProject(user.id)
+    loadProject()
   }, [projectId, fetchProjects, setCurrentProject])
 
   useEffect(() => {

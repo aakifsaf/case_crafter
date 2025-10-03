@@ -9,14 +9,16 @@ export const TestCaseVisualization = ({ projectId }) => {
     traceabilityMatrix, 
     testSuites, 
     fetchTraceabilityMatrix, 
+    fetchTestSuite,
     loading 
   } = useProjectStore()
 
   useEffect(() => {
     if (projectId) {
       fetchTraceabilityMatrix(projectId)
+      fetchTestSuite(projectId)
     }
-  }, [projectId, fetchTraceabilityMatrix])
+  }, [projectId, fetchTraceabilityMatrix, fetchTestSuite])
 
   const calculateCoverage = () => {
     if (!traceabilityMatrix) return 0

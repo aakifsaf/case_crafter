@@ -177,7 +177,7 @@ export const ExportPanel = ({ testSuites, onClose }) => {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end space-x-4 pt-6" data-aos="fade-up" data-aos-delay="400">
+            <div className="flex justify-end space-x-4 pt-6">
               <button
                 onClick={onClose}
                 className="px-6 py-3 text-sm font-medium text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:text-white transition-all duration-300 transform hover:scale-105"

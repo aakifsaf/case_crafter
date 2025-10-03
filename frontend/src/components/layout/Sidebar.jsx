@@ -7,13 +7,18 @@ import {
   XMarkIcon,
   Cog6ToothIcon,
   UserIcon,
+  DocumentDuplicateIcon,
+  DocumentArrowUpIcon,
+  CogIcon,
   ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
 
 const navigation = [
   { name: 'Projects', href: '/projects', icon: FolderIcon },
-  { name: 'Documents', href: '/documents', icon: DocumentTextIcon },
-  { name: 'Test Suites', href: '/test-suites', icon: ChartBarIcon },
+  { name: 'Templates', href: '/templates', icon: DocumentDuplicateIcon },
+  { name: 'Upload BRD', href: '/upload', icon: DocumentArrowUpIcon },
+  { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
+  { name: 'Settings', href: '/settings', icon: CogIcon },
 ]
 
 export const Sidebar = ({ open, setOpen }) => {

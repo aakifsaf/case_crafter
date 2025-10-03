@@ -3,13 +3,25 @@ import { useProjectStore } from '../../stores/useProjectStore'
 import { DocumentUpload } from './DocumentUpload'
 import { DocumentList } from './DocumentList'
 import { DocumentProcessingStatus } from './DocumentProcessingStatus'
-import { ArrowUpTrayIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ArrowUpTrayIcon, XMarkIcon, FolderIcon, DocumentTextIcon,
+  ChartBarIcon, CogIcon
+ } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
+import { useParams, Link } from 'react-router-dom'
 
-export const DocumentManager = ({ projectId }) => {
+  const navigation = [
+  { name: 'Overview', href: '', icon: FolderIcon },
+  { name: 'Documents', href: 'documents', icon: DocumentTextIcon },
+  { name: 'Test Suite', href: 'test-suite', icon: ChartBarIcon },
+  { name: 'Settings', href: 'settings', icon: CogIcon },
+]
+export const DocumentManager = ({ }) => {
   const { documents, fetchDocuments, loading } = useProjectStore()
   const [showUpload, setShowUpload] = useState(false)
   const [selectedDocument, setSelectedDocument] = useState(null)
+  const { projectId } = useParams()
+  const [activeTab, setActiveTab] = useState('')
+
 
   useEffect(() => {
     if (projectId) {
@@ -17,9 +29,62 @@ export const DocumentManager = ({ projectId }) => {
     }
   }, [projectId, fetchDocuments])
 
+    useEffect(() => {
+    const pathSegments = location.pathname.split('/')
+    const currentTab = pathSegments[pathSegments.length - 1]
+    setActiveTab(currentTab === projectId ? '' : currentTab)
+  }, [location.pathname, projectId])
+
   return (
     <div className="space-y-8">
       {/* Header */}
+      {/* Project Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        
+        {/* Navigation Tabs */}
+        <div className=" border-b border-gray-700/50">
+          <nav className="-mb-px flex space-x-8">
+            {navigation.map((item) => {
+              const isActive = activeTab === item.href
+              const href = item.href ? `/projects/${projectId}/${item.href}` : `/projects/${projectId}`
+              
+              return (
+                <Link
+                  key={item.name}
+                  to={href}
+                  className={`group relative inline-flex items-center py-4 px-1 font-medium text-sm transition-all duration-300 ${
+                    isActive
+                      ? 'text-cyan-400'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-b-2 border-cyan-400"
+                      transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+                    />
+                  )}
+                  <div className="relative z-10 flex items-center">
+                    <item.icon
+                      className={`mr-3 h-5 w-5 transition-all duration-300 ${
+                        isActive 
+                          ? 'text-cyan-400' 
+                          : 'text-gray-500 group-hover:text-gray-300'
+                      }`}
+                    />
+                    {item.name}
+                  </div>
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
+      </motion.div>
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -71,12 +136,12 @@ export const DocumentManager = ({ projectId }) => {
       <DocumentList projectId={projectId} />
 
       {/* Processing Status Modal */}
-      {selectedDocument && (
+      {/* {selectedDocument && (
         <DocumentProcessingStatus
           documentId={selectedDocument.id}
           onClose={() => setSelectedDocument(null)}
         />
-      )}
+      )} */}
     </div>
   )
 }

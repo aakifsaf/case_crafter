@@ -6,14 +6,16 @@ import { DocumentTextIcon, ChartBarIcon } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 
 export const ProjectOverview = ({ projectId }) => {
-  const { documents, testSuites, fetchDocuments, fetchTraceabilityMatrix, traceabilityMatrix } = useProjectStore()
+  const { documents, testSuites, fetchDocuments, fetchTraceabilityMatrix, traceabilityMatrix, fetchTestSuite } = useProjectStore()
 
   useEffect(() => {
     if (projectId) {
       fetchDocuments(projectId)
       fetchTraceabilityMatrix(projectId)
+      fetchTestSuite(projectId)
+
     }
-  }, [projectId, fetchDocuments, fetchTraceabilityMatrix])
+  }, [projectId, fetchDocuments, fetchTraceabilityMatrix, fetchTestSuite])
 
   const calculateCoverage = () => {
     if (!traceabilityMatrix) return 0

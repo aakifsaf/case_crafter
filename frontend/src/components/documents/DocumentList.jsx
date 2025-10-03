@@ -72,7 +72,7 @@ export const DocumentList = ({ projectId }) => {
               </div>
               
               <div className="flex items-center space-x-3">
-                <DocumentProcessingStatus documentId={document.id} />
+                {/* <DocumentProcessingStatus documentId={document.id} /> */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

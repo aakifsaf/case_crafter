@@ -87,12 +87,28 @@ export const useProjectStore = create(
       try {
         const response = await testService.generateTestCases(documentId)
         // Handle the response structure
+        console.log('Generated test cases response:', response.data)
         const testSuite = response.data || response
         set(state => ({
           testSuites: [...state.testSuites, testSuite],
           loading: false
         }))
         return testSuite
+      } catch (error) {
+        set({ error: error.message, loading: false })
+        throw error
+      }
+    },
+
+    fetchTestSuite: async (projectId) => {
+      set({ loading: true })
+      try {
+        const response = await testService.getTestSuite(projectId)
+        console.log('Fetched test suite response:', response.data)
+        // Handle the response structure
+        const testSuites = response.data.test_suites || response
+        set({ testSuites, loading: false })
+        return testSuites
       } catch (error) {
         set({ error: error.message, loading: false })
         throw error
@@ -114,16 +130,52 @@ export const useProjectStore = create(
     },
 
     // Export actions
-    exportTestSuite: async (testSuiteId, format) => {
-      set({ loading: true })
-      try {
-        const result = await testService.exportTestSuite(testSuiteId, format)
-        set({ loading: false })
-        return result
-      } catch (error) {
-        set({ error: error.message, loading: false })
-        throw error
+exportTestSuite: async (testSuiteId, format, filename = null) => {
+  set({ loading: true })
+  try {
+    const response = await testService.exportTestSuite(testSuiteId, format)
+    
+    // Create blob URL and trigger download
+    const blob = new Blob([response.data])
+    const url = window.URL.createObjectURL(blob)
+    
+    // Create a temporary anchor element to trigger download
+    const link = document.createElement('a')
+    link.href = url
+    
+    // Get filename from response headers or use default
+    const contentDisposition = response.headers['content-disposition']
+    let downloadFilename = filename
+    
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i)
+      if (filenameMatch && filenameMatch[1]) {
+        downloadFilename = filenameMatch[1]
       }
     }
+    
+    // Set default filename if not provided
+    if (!downloadFilename) {
+      downloadFilename = `test-suite-${testSuiteId}.${format}`
+    }
+    
+    link.setAttribute('download', downloadFilename)
+    document.body.appendChild(link)
+    link.click()
+    
+    // Clean up
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
+    set({ loading: false })
+    return { success: true, filename: downloadFilename }
+  } catch (error) {
+    set({ 
+      error: error.response?.data?.message || error.message || 'Export failed',
+      loading: false 
+    })
+    throw error
+  }
+}
   }))
 )

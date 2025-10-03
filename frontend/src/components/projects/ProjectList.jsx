@@ -22,8 +22,10 @@ export const ProjectList = () => {
     try {
       await createProject({ name: newProjectName, description: newProjectDescription })
       setNewProjectName('')
-      setNewProjectDescription
+      setNewProjectDescription('')
+      fetchProjects()
       setShowCreateModal(false)
+
     } catch (error) {
       console.error('Failed to create project:', error)
     }

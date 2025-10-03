@@ -8,6 +8,15 @@ from fastapi.responses import FileResponse
 import pandas as pd
 import tempfile
 import os
+import io
+from fastapi import Response
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 class TestService:
     def __init__(self, db: Session):
@@ -144,6 +153,8 @@ class TestService:
             return await self._export_to_excel(test_suite, test_cases)
         elif format == "json":
             return await self._export_to_json(test_suite, test_cases)
+        elif format == "pdf":
+            return await self._export_to_pdf(test_suite, test_cases)
         else:
             raise Exception("Unsupported export format")
 
@@ -193,3 +204,163 @@ class TestService:
         }
         
         return export_data
+    async def _export_to_pdf(self, test_suite, test_cases):
+        """Export test suite to PDF format"""
+        try:
+            # Create a buffer to store PDF
+            buffer = io.BytesIO()
+            
+            # Create PDF document
+            doc = SimpleDocTemplate(
+                buffer,
+                pagesize=A4,
+                rightMargin=72,
+                leftMargin=72,
+                topMargin=72,
+                bottomMargin=72
+            )
+            
+            # Create story (content) for PDF
+            story = []
+            styles = getSampleStyleSheet()
+            
+            # Title
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=18,
+                spaceAfter=30,
+                alignment=1,  # Center aligned
+                textColor=colors.darkblue
+            )
+            title = Paragraph(f"Test Suite: {test_suite.name}", title_style)
+            story.append(title)
+            
+            # Test Suite Information
+            info_style = ParagraphStyle(
+                'InfoStyle',
+                parent=styles['Normal'],
+                fontSize=10,
+                spaceAfter=12,
+                textColor=colors.gray
+            )
+            
+            story.append(Paragraph(f"Document: {test_suite.document.filename}", info_style))
+            story.append(Paragraph(f"Created: {test_suite.created_at.strftime('%Y-%m-%d %H:%M')}", info_style))
+            story.append(Paragraph(f"Total Test Cases: {len(test_cases)}", info_style))
+            
+            story.append(Spacer(1, 20))
+            
+            # Test Cases Table
+            if test_cases:
+                # Table header
+                table_data = [[
+                    "ID", 
+                    "Name", 
+                    "Type", 
+                    "Priority", 
+                    "Description"
+                ]]
+                
+                # Table rows
+                for tc in test_cases:
+                    # Truncate long descriptions for table display
+                    description = (tc.description or "")[:100] + "..." if len(tc.description or "") > 100 else (tc.description or "")
+                    
+                    table_data.append([
+                        str(tc.id),
+                        tc.name[:50] + "..." if len(tc.name) > 50 else tc.name,
+                        tc.test_type,
+                        tc.priority,
+                        description
+                    ])
+                
+                # Create table
+                table = Table(table_data, colWidths=[0.5*inch, 2*inch, 0.8*inch, 0.8*inch, 2*inch])
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                
+                story.append(table)
+                story.append(Spacer(1, 20))
+                
+                # Detailed Test Cases
+                detail_style = ParagraphStyle(
+                    'DetailStyle',
+                    parent=styles['Heading2'],
+                    fontSize=14,
+                    spaceAfter=12,
+                    textColor=colors.darkblue
+                )
+                story.append(Paragraph("Detailed Test Cases", detail_style))
+                
+                for i, tc in enumerate(test_cases, 1):
+                    # Test Case Header
+                    tc_header = ParagraphStyle(
+                        'TestCaseHeader',
+                        parent=styles['Heading3'],
+                        fontSize=12,
+                        spaceAfter=6,
+                        textColor=colors.navy
+                    )
+                    story.append(Paragraph(f"Test Case {i}: {tc.name}", tc_header))
+                    
+                    # Test Case Details
+                    details = [
+                        f"<b>ID:</b> {tc.id}",
+                        f"<b>Type:</b> {tc.test_type}",
+                        f"<b>Priority:</b> {tc.priority}",
+                        f"<b>Description:</b> {tc.description or 'N/A'}"
+                    ]
+                    
+                    for detail in details:
+                        story.append(Paragraph(detail, styles['Normal']))
+                    
+                    # Test Steps
+                    if tc.test_steps:
+                        story.append(Paragraph("<b>Test Steps:</b>", styles['Normal']))
+                        for j, step in enumerate(tc.test_steps, 1):
+                            story.append(Paragraph(f"  {j}. {step}", styles['Normal']))
+                    
+                    # Expected Results
+                    if tc.expected_results:
+                        story.append(Paragraph(f"<b>Expected Results:</b> {tc.expected_results}", styles['Normal']))
+                    
+                    # Test Data
+                    if tc.test_data:
+                        story.append(Paragraph(f"<b>Test Data:</b> {tc.test_data}", styles['Normal']))
+                    
+                    story.append(Spacer(1, 12))
+            
+            else:
+                story.append(Paragraph("No test cases found.", styles['Normal']))
+            
+            # Build PDF
+            doc.build(story)
+            
+            # Get PDF content from buffer
+            pdf_content = buffer.getvalue()
+            buffer.close()
+            
+            # Return as FileResponse
+            filename = f"{test_suite.name.replace(' ', '_')}_test_cases.pdf"
+            
+            return Response(
+                content=pdf_content,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename={filename}",
+                    "Content-Length": str(len(pdf_content))
+                }
+            )
+            
+        except Exception as e:
+            raise Exception(f"PDF generation failed: {str(e)}")

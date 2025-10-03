@@ -96,8 +96,8 @@ export const TraceabilityGraph = ({ matrix }) => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
-                        {requirement.original_text.substring(0, 80)}
-                        {requirement.original_text.length > 80 ? '...' : ''}
+                        {requirement.text.substring(0, 80)}
+                        {requirement.text.length > 80 ? '...' : ''}
                       </h3>
                       <div className="flex items-center space-x-2">
                         <div className={`

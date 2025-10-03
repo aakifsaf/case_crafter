@@ -41,6 +41,14 @@ class Project(Base):
     documents = relationship("Document", back_populates="project", cascade="all, delete-orphan")
     test_suites = relationship("TestSuite", back_populates="project")
 
+    @property
+    def document_count(self) -> int:
+        return len(self.documents) if self.documents else 0
+    
+    @property
+    def test_suite_count(self) -> int:
+        return len(self.test_suites) if self.test_suites else 0
+
 class Document(Base):
     __tablename__ = "documents"
     

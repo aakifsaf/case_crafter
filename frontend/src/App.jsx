@@ -14,6 +14,10 @@ import { DocumentList } from './components/documents/DocumentList'
 import { TestSuiteView } from './components/test-cases/TestSuiteView'
 import { DocumentManager } from './components/documents/DocumentManager'
 import { ProjectSettings } from './components/projects/ProjectSettings'
+import { AnalyticsDashboard } from './components/tabs/AnalyticsDashboard'
+import { TemplatesList } from './components/tabs/TemplatesList'
+import { QuickUpload } from './components/tabs/QuickUpload'
+import { SettingsPanel } from './components/tabs/SettingsPanel'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -99,6 +103,47 @@ function App() {
                  </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/templates" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <TemplatesList />
+                  </Layout>
+                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/quick-upload" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <QuickUpload />
+                  </Layout>
+                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <AnalyticsDashboard />
+                  </Layout>
+                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <SettingsPanel />
+                  </Layout>
+                 </ProtectedRoute>
+              } 
+            />
+
             
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />

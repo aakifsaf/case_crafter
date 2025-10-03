@@ -2,9 +2,16 @@ import { useDropzone } from 'react-dropzone'
 import { useProjectStore } from '../../stores/useProjectStore'
 import { DocumentArrowUpIcon } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
+import { useParams } from 'react-router-dom'
+import { useEffect } from 'react'
 
-export const DocumentUpload = ({ projectId }) => {
+export const DocumentUpload = ({ }) => {
   const { uploadDocument, loading } = useProjectStore()
+  const { projectId } = useParams()
+
+  useEffect(() => {
+    console.log('🔄 DocumentUpload projectId from useParams:', projectId)
+  }, [projectId])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -15,12 +22,19 @@ export const DocumentUpload = ({ projectId }) => {
     maxFiles: 1,
     maxSize: 10 * 1024 * 1024, // 10MB
     onDrop: async (acceptedFiles) => {
+      console.log('📁 Files dropped:', acceptedFiles)
+      console.log('🔍 Project ID:', projectId)
+      
       if (acceptedFiles.length > 0 && projectId) {
         try {
+          console.log('🚀 Starting upload...')
           await uploadDocument(acceptedFiles[0], projectId)
+          console.log('✅ Upload completed')
         } catch (error) {
-          console.error('Upload failed:', error)
+          console.error('❌ Upload failed:', error)
         }
+      } else {
+        console.log('❌ No files or projectId missing')
       }
     }
   })
