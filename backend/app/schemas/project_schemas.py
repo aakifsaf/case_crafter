@@ -11,6 +11,7 @@ class ProjectCreate(ProjectBase):
 
 class Project(ProjectBase):
     id: int
+    user_id: int 
     created_at: datetime
     updated_at: datetime  # FIX: Remove Optional, always required
     

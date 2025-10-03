@@ -1,75 +1,89 @@
-export const HeroSection = () => {
-  return (
-    <div className="relative bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-        <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-          <svg
-            className="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-white transform translate-x-1/2"
-            fill="currentColor"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <polygon points="50,0 100,0 50,100 0,100" />
-          </svg>
+import { useEffect } from 'react'
+import AOS from 'aos'
+import 'aos/dist/aos.css'
 
-          <div className="pt-10 mx-auto max-w-7xl px-4 sm:pt-12 sm:px-6 md:pt-16 lg:pt-20 lg:px-8 xl:pt-28">
-            <div className="sm:text-center lg:text-left">
-              <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                <span className="block">AI-Powered Test Case</span>
-                <span className="block text-blue-600">Generation</span>
-              </h1>
-              <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                Transform your Business Requirements Documents into comprehensive test suites automatically. 
-                Save time, ensure 100% coverage, and accelerate your software delivery with AI.
-              </p>
-              <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                <div className="rounded-md shadow">
-                  <a
-                    href="/register"
-                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
+export const HeroSection = () => {
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      easing: 'ease-out-quad',
+      once: true
+    })
+  }, [])
+
+  return (
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
+      
+      {/* Grid pattern */}
+      <div className="absolute inset-0 bg-grid-pattern bg-[size:50px_50px] opacity-10"></div>
+      
+      {/* Floating elements */}
+      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32">
+        <div className="flex flex-col lg:flex-row items-center justify-between">
+          {/* Left content */}
+          <div className="lg:w-1/2 text-center lg:text-left" data-aos="fade-right">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+              <span className="block">AI-Powered</span>
+              <span className="block bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                Test Generation
+              </span>
+            </h1>
+            <p className="text-xl text-blue-100 mb-10 max-w-2xl">
+              Transform requirements into comprehensive test suites with cutting-edge AI. 
+              Accelerate delivery while ensuring 100% coverage.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <a
+                href="/register"
+                className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-xl hover:shadow-2xl hover:shadow-cyan-500/30 transition-all duration-300 transform hover:-translate-y-1"
+              >
+                Start Free Trial
+              </a>
+              <a
+                href="/login"
+                className="px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition-all duration-300"
+              >
+                Sign In
+              </a>
+            </div>
+          </div>
+          
+          {/* Right content */}
+          <div className="lg:w-1/2 mt-16 lg:mt-0" data-aos="fade-left" data-aos-delay="300">
+            <div className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 ml-6 shadow-2xl">
+              <h3 className="text-2xl font-bold text-white mb-6 text-center">How It Works</h3>
+              <div className="space-y-6">
+                {[
+                  { step: '1', text: 'Upload BRD Document' },
+                  { step: '2', text: 'AI Analyzes Requirements' },
+                  { step: '3', text: 'Generate Test Cases' },
+                  { step: '4', text: 'Export & Integrate' }
+                ].map((item) => (
+                  <div 
+                    key={item.step}
+                    className="flex items-center space-x-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all duration-300 transform hover:scale-105"
                   >
-                    Get Started Free
-                  </a>
-                </div>
-                <div className="mt-3 sm:mt-0 sm:ml-3">
-                  <a
-                    href="/login"
-                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 md:py-4 md:text-lg md:px-10"
-                  >
-                    Sign In
-                  </a>
-                </div>
+                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center font-bold text-white">
+                      {item.step}
+                    </div>
+                    <span className="text-blue-100 text-lg font-medium">{item.text}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-        <div className="h-56 w-full bg-gradient-to-r from-blue-400 to-blue-600 sm:h-72 md:h-96 lg:w-full lg:h-full flex items-center justify-center">
-          <div className="text-white text-center p-8">
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-8 max-w-md">
-              <h3 className="text-2xl font-bold mb-4">How It Works</h3>
-              <div className="space-y-4 text-left">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">1</div>
-                  <span>Upload BRD Document</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">2</div>
-                  <span>AI Analyzes Requirements</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">3</div>
-                  <span>Generate Test Cases</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">4</div>
-                  <span>Export & Integrate</span>
-                </div>
-              </div>
-            </div>
-          </div>
+      
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-cyan-400 rounded-full mt-2 animate-bounce"></div>
         </div>
       </div>
     </div>

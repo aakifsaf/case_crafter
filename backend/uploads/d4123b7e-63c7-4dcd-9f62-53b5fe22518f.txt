@@ -1,0 +1,8 @@
+Django>=4.0
+djangorestframework>=3.14
+django-filter>=23.1
+djangorestframework-simplejwt>=5.2.2 
+psycopg2-binary>=2.9.6
+django-cors-headers>=4.2.0
+pandas
+openpyxl

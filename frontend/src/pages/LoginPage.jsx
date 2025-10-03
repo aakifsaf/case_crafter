@@ -52,8 +52,8 @@ export const LoginPage = () => {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
       
-      <div className="max-w-md w-full space-y-8 z-10 px-4 sm:px-6 lg:px-8">
-        <div className={`bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+      <div className="max-w-md w-full space-y-8 z-10 px-4 sm:px-6 lg:px-8 py-12">
+        
           <div className="text-center">
             <div className="mx-auto h-20 w-20 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg mb-6 relative">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-2xl animate-pulse"></div>
@@ -73,7 +73,7 @@ export const LoginPage = () => {
               </Link>
             </p>
           </div>
-
+        <div className={`bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-8 pt-0 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="rounded-xl bg-red-400/10 p-4 border border-red-400/20 backdrop-blur-sm">
@@ -193,11 +193,6 @@ export const LoginPage = () => {
               <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"></div>
             </button>
           </form>
-        </div>
-        
-        {/* Footer note */}
-        <div className="text-center">
-          <p className="text-xs text-gray-400/70">Experience the future of test automation</p>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useProjectStore } from '../../stores/useProjectStore'
 import { StatCard } from '../ui/StatCard'
 import { DocumentTextIcon, ChartBarIcon } from '@heroicons/react/24/outline'
+import { motion } from 'framer-motion'
 
 export const ProjectOverview = ({ projectId }) => {
   const { documents, testSuites, fetchDocuments, fetchTraceabilityMatrix, traceabilityMatrix } = useProjectStore()
@@ -26,144 +27,184 @@ export const ProjectOverview = ({ projectId }) => {
   const recentDocuments = documents.slice(0, 3)
   const recentTestSuites = testSuites.slice(0, 3)
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5
+      }
+    }
+  }
+
   return (
-    <div className="space-y-6">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-8"
+    >
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Documents"
           value={documents.length}
           icon="📄"
           description="BRD documents uploaded"
+          gradient="from-purple-500/20 to-blue-500/20"
         />
         <StatCard
           title="Test Suites"
           value={testSuites.length}
           icon="✅"
           description="Generated test suites"
+          gradient="from-green-500/20 to-cyan-500/20"
         />
         <StatCard
           title="Requirements"
           value={traceabilityMatrix?.requirements.length || 0}
           icon="🎯"
           description="Extracted requirements"
+          gradient="from-orange-500/20 to-red-500/20"
         />
         <StatCard
           title="Coverage"
           value={`${calculateCoverage()}%`}
           icon="📊"
           description="Requirements covered by tests"
+          gradient="from-cyan-500/20 to-blue-500/20"
         />
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Documents */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Recent Documents</h3>
+        <div className="bg-gradient-to-br from-gray-900/70 to-gray-800/50 backdrop-blur-md rounded-2xl border border-gray-700/30 p-6 shadow-2xl">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-gray-100">Recent Documents</h3>
             <Link
               to={`/projects/${projectId}/documents`}
-              className="text-sm text-blue-600 hover:text-blue-500"
+              className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-300"
             >
               View all
             </Link>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {recentDocuments.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No documents yet</p>
+              <p className="text-gray-400 text-center py-8">No documents yet</p>
             ) : (
               recentDocuments.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                <motion.div 
+                  key={doc.id} 
+                  whileHover={{ scale: 1.02 }}
+                  className="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/50 backdrop-blur-sm transition-all duration-300 hover:border-cyan-500/30"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="p-2 bg-gray-700/50 rounded-lg">
+                      <DocumentTextIcon className="h-5 w-5 text-cyan-400" />
+                    </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{doc.filename}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm font-medium text-gray-100">{doc.filename}</p>
+                      <p className="text-xs text-gray-400 mt-1">
                         {new Date(doc.uploaded_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${
                     doc.status === 'processed' 
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
                       : doc.status === 'processing'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
+                      ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                      : 'bg-red-500/20 text-red-300 border border-red-500/30'
                   }`}>
                     {doc.status}
                   </span>
-                </div>
+                </motion.div>
               ))
             )}
           </div>
         </div>
 
         {/* Recent Test Suites */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Recent Test Suites</h3>
+        <div className="bg-gradient-to-br from-gray-900/70 to-gray-800/50 backdrop-blur-md rounded-2xl border border-gray-700/30 p-6 shadow-2xl">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-gray-100">Recent Test Suites</h3>
             <Link
               to={`/projects/${projectId}/test-suite`}
-              className="text-sm text-blue-600 hover:text-blue-500"
+              className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-300"
             >
               View all
             </Link>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {recentTestSuites.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No test suites generated</p>
+              <p className="text-gray-400 text-center py-8">No test suites generated</p>
             ) : (
               recentTestSuites.map((suite) => (
-                <div key={suite.id} className="p-3 border border-gray-100 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="text-sm font-medium text-gray-900">{suite.name}</p>
-                    <span className="text-xs text-gray-500">
-                      {suite.test_cases?.length || 0} test cases
+                <motion.div 
+                  key={suite.id} 
+                  whileHover={{ scale: 1.02 }}
+                  className="p-4 bg-gray-800/40 rounded-xl border border-gray-700/50 backdrop-blur-sm transition-all duration-300 hover:border-cyan-500/30"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <p className="text-sm font-medium text-gray-100">{suite.name}</p>
+                    <span className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-full">
+                      {suite.test_cases?.length || 0} tests
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 line-clamp-2">
+                  <p className="text-xs text-gray-400 line-clamp-2 mb-3">
                     Generated from {suite.document_name}
                   </p>
-                  <div className="flex justify-between items-center mt-2">
+                  <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-500">
                       {new Date(suite.created_at).toLocaleDateString()}
                     </span>
                     <div className="flex space-x-2">
-                      <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                      <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30">
                         Positive: {suite.test_cases?.filter(tc => tc.test_type === 'positive').length || 0}
                       </span>
-                      <span className="inline-flex items-center px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                      <span className="inline-flex items-center px-2 py-1 text-xs bg-orange-500/20 text-orange-300 rounded-full border border-orange-500/30">
                         Edge: {suite.test_cases?.filter(tc => tc.test_type === 'edge').length || 0}
                       </span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-        <div className="flex space-x-4">
+      <motion.div variants={itemVariants} className="bg-gradient-to-br from-gray-900/70 to-gray-800/50 backdrop-blur-md rounded-2xl border border-gray-700/30 p-8 shadow-2xl">
+        <h3 className="text-xl font-semibold text-gray-100 mb-6">Quick Actions</h3>
+        <div className="flex space-x-6">
           <Link
             to={`/projects/${projectId}/documents`}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-xl shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-105"
           >
-            <DocumentTextIcon className="h-4 w-4 mr-2" />
+            <DocumentTextIcon className="h-5 w-5 mr-3" />
             Upload Document
           </Link>
           <Link
             to={`/projects/${projectId}/test-suite`}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-6 py-3 border border-gray-600 text-gray-100 font-medium rounded-xl backdrop-blur-sm bg-gray-800/40 hover:bg-gray-700/60 transition-all duration-300 hover:scale-105"
           >
-            <ChartBarIcon className="h-4 w-4 mr-2" />
+            <ChartBarIcon className="h-5 w-5 mr-3" />
             View Test Suite
           </Link>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

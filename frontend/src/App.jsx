@@ -10,6 +10,10 @@ import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { ProjectList } from './components/projects/ProjectList'
 import { ProjectDetail } from './components/projects/ProjectDetail'
+import { DocumentList } from './components/documents/DocumentList'
+import { TestSuiteView } from './components/test-cases/TestSuiteView'
+import { DocumentManager } from './components/documents/DocumentManager'
+import { ProjectSettings } from './components/projects/ProjectSettings'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -70,19 +74,29 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <div>Document Manager - Add your component here</div>
+                    <DocumentManager />
                   </Layout>
-                </ProtectedRoute>
+                 </ProtectedRoute>
               } 
             />
             <Route 
               path="/projects/:projectId/test-suite" 
               element={
+               <ProtectedRoute>
+                  <Layout>
+                    <TestSuiteView />
+                  </Layout>
+               </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/projects/:projectId/settings" 
+              element={
                 <ProtectedRoute>
                   <Layout>
-                    <div>Test Suite - Add your component here</div>
+                    <ProjectSettings />
                   </Layout>
-                </ProtectedRoute>
+                 </ProtectedRoute>
               } 
             />
             

@@ -1,5 +1,13 @@
 import { apiClient } from '../lib/api'
 
+export const authService = {
+  login: (email, password) => 
+    apiClient.post('/auth/login', { email, password }),
+
+  register: (userData) => 
+    apiClient.post('/auth/register', userData)
+}
+
 export const projectService = {
   getProjects: () => apiClient.get('/projects'),
   createProject: (data) => apiClient.post('/projects', data),

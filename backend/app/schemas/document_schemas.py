@@ -17,7 +17,7 @@ class Document(DocumentBase):
     status: str
     uploaded_at: datetime
     processed_text: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
     
     class Config:
         from_attributes = True

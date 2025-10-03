@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useProjectStore } from '../../stores/useProjectStore'
 import { TraceabilityGraph } from './TraceabilityGraph'
 import { TestCaseList } from './TestCaseList'
+import { StatCard } from '../ui/StatCard'
 
 export const TestCaseVisualization = ({ projectId }) => {
   const { 
@@ -36,42 +37,50 @@ export const TestCaseVisualization = ({ projectId }) => {
     return <div className="animate-pulse bg-white rounded-lg p-6 h-64"></div>
   }
 
-  return (
-    <div className="space-y-6">
+return (
+    <div className="space-y-8">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Requirements"
           value={traceabilityMatrix?.requirements.length || 0}
           icon="📄"
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-md border border-gray-700/50 hover:border-cyan-500/30 transition-all duration-500"
         />
         <StatCard
           title="Test Cases"
           value={traceabilityMatrix?.test_cases.length || 0}
           icon="✅"
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-md border border-gray-700/50 hover:border-cyan-500/30 transition-all duration-500"
         />
         <StatCard
           title="Coverage"
           value={`${calculateCoverage()}%`}
           icon="📊"
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-md border border-gray-700/50 hover:border-cyan-500/30 transition-all duration-500"
         />
         <StatCard
           title="Edge Cases"
           value={countEdgeCases()}
           icon="⚠️"
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-md border border-gray-700/50 hover:border-cyan-500/30 transition-all duration-500"
         />
       </div>
 
       {/* Traceability Graph */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <div className="bg-gray-800/30 backdrop-blur-md rounded-2xl border border-gray-700/50 p-8 transform transition-all duration-500 hover:border-cyan-500/30">
+        <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 mb-6">
           Requirement-Test Traceability
         </h3>
-        <TraceabilityGraph matrix={traceabilityMatrix} />
+        <div className="rounded-xl overflow-hidden">
+          <TraceabilityGraph matrix={traceabilityMatrix} />
+        </div>
       </div>
 
       {/* Test Case List */}
-      <TestCaseList testSuites={testSuites} />
+      <div className="bg-gray-800/30 backdrop-blur-md rounded-2xl border border-gray-700/50 p-8 transform transition-all duration-500 hover:border-cyan-500/30">
+        <TestCaseList testSuites={testSuites} />
+      </div>
     </div>
   )
 }

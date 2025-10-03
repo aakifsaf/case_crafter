@@ -20,10 +20,10 @@ export const useProjectStore = create(
     clearError: () => set({ error: null }),
 
     // Project actions
-    fetchProjects: async () => {
+    fetchProjects: async (user_id) => {
       set({ loading: true })
       try {
-        const projects_data = await projectService.getProjects()
+        const projects_data = await projectService.getProjects(user_id)
         const projects = projects_data.data
         set({ projects, loading: false })
       } catch (error) {
@@ -32,10 +32,10 @@ export const useProjectStore = create(
     },
 
     setCurrentProject: (project) => {
-      set({ currentProject: project })
+      set({ currentProject: project, loading: false })
     },
 
-    createProject: async (projectData) => {
+    createProject: async (projectData, user_id) => {
       set({ loading: true })
       try {
         const newProject = await projectService.createProject(projectData)
@@ -70,7 +70,9 @@ export const useProjectStore = create(
     fetchDocuments: async (projectId) => {
       set({ loading: true })
       try {
-        const documents = await documentService.getDocuments(projectId)
+        const documents_data = await documentService.getDocuments(projectId)
+        const documents = documents_data.data
+        console.log('Fetched documents:', documents)
         set({ documents, loading: false })
       } catch (error) {
         set({ error: error.message, loading: false })
@@ -96,7 +98,8 @@ export const useProjectStore = create(
     fetchTraceabilityMatrix: async (projectId) => {
       set({ loading: true })
       try {
-        const matrix = await testService.getTraceabilityMatrix(projectId)
+        const matrix_data = await testService.getTraceabilityMatrix(projectId)
+        const matrix = matrix_data.data
         set({ traceabilityMatrix: matrix, loading: false })
         return matrix
       } catch (error) {

@@ -78,7 +78,7 @@ class DocumentService:
             # Update document status
             document.status = "processed"
             document.processed_text = processed_data['raw_text']
-            document.metadata = processed_data['metadata']
+            document.meta_data = processed_data['metadata']
             
             self.db.commit()
 
