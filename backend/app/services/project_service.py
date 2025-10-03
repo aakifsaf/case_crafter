@@ -8,22 +8,25 @@ class ProjectService:
     def __init__(self, db: Session):
         self.db = db
 
-    async def get_all_projects(self) -> List[ProjectModel]:
-        projects = self.db.query(ProjectModel).all()
+    async def get_user_projects(self, user_id: int) -> List[ProjectModel]:
+        projects = self.db.query(ProjectModel).filter(ProjectModel.user_id == user_id).all()
         # Ensure updated_at is never None
         for project in projects:
             if project.updated_at is None:
                 project.updated_at = project.created_at or datetime.utcnow()
         return projects
 
-    async def get_project(self, project_id: int) -> Optional[ProjectModel]:
-        project = self.db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
+    async def get_user_project(self, project_id: int, user_id: int) -> Optional[ProjectModel]:
+        project = self.db.query(ProjectModel).filter(
+            ProjectModel.id == project_id,
+            ProjectModel.user_id == user_id
+        ).first()
         if project and project.updated_at is None:
             project.updated_at = project.created_at or datetime.utcnow()
         return project
 
-    async def create_project(self, project: ProjectCreate) -> ProjectModel:
-        db_project = ProjectModel(**project.dict())
+    async def create_user_project(self, project: ProjectCreate, user_id: int) -> ProjectModel:
+        db_project = ProjectModel(**project.dict(), user_id=user_id)
         # Set both created_at and updated_at explicitly
         now = datetime.utcnow()
         db_project.created_at = now
@@ -34,8 +37,11 @@ class ProjectService:
         self.db.refresh(db_project)
         return db_project
 
-    async def delete_project(self, project_id: int) -> bool:
-        project = self.db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
+    async def delete_user_project(self, project_id: int, user_id: int) -> bool:
+        project = self.db.query(ProjectModel).filter(
+            ProjectModel.id == project_id,
+            ProjectModel.user_id == user_id
+        ).first()
         if project:
             self.db.delete(project)
             self.db.commit()
