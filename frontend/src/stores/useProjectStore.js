@@ -20,10 +20,10 @@ export const useProjectStore = create(
     clearError: () => set({ error: null }),
 
     // Project actions
-    fetchProjects: async (user_id) => {
+    fetchProjects: async () => {
       set({ loading: true })
       try {
-        const projects_data = await projectService.getProjects(user_id)
+        const projects_data = await projectService.getProjects()
         const projects = projects_data.data
         set({ projects, loading: false })
       } catch (error) {
@@ -32,10 +32,10 @@ export const useProjectStore = create(
     },
 
     setCurrentProject: (project) => {
-      set({ currentProject: project, loading: false })
+      set({ currentProject: project, loading})
     },
 
-    createProject: async (projectData, user_id) => {
+    createProject: async (projectData) => {
       set({ loading: true })
       try {
         const newProject = await projectService.createProject(projectData)
