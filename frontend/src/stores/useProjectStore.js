@@ -23,8 +23,9 @@ export const useProjectStore = create(
     fetchProjects: async () => {
       set({ loading: true })
       try {
-        const projects_data = await projectService.getProjects()
-        const projects = projects_data.data
+        const response = await projectService.getProjects()
+        // Assuming the backend returns the list directly or in a data property
+        const projects = response.data || response
         set({ projects, loading: false })
       } catch (error) {
         set({ error: error.message, loading: false })
@@ -32,7 +33,7 @@ export const useProjectStore = create(
     },
 
     setCurrentProject: (project) => {
-      set({ currentProject: project, loading})
+      set({ currentProject: project })
     },
 
     createProject: async (projectData) => {
@@ -70,8 +71,9 @@ export const useProjectStore = create(
     fetchDocuments: async (projectId) => {
       set({ loading: true })
       try {
-        const documents_data = await documentService.getDocuments(projectId)
-        const documents = documents_data.data
+        const response = await documentService.getDocuments(projectId)
+        // Handle the response structure
+        const documents = response.data || response
         console.log('Fetched documents:', documents)
         set({ documents, loading: false })
       } catch (error) {
@@ -83,7 +85,9 @@ export const useProjectStore = create(
     generateTestCases: async (documentId) => {
       set({ loading: true })
       try {
-        const testSuite = await testService.generateTestCases(documentId)
+        const response = await testService.generateTestCases(documentId)
+        // Handle the response structure
+        const testSuite = response.data || response
         set(state => ({
           testSuites: [...state.testSuites, testSuite],
           loading: false
@@ -98,8 +102,9 @@ export const useProjectStore = create(
     fetchTraceabilityMatrix: async (projectId) => {
       set({ loading: true })
       try {
-        const matrix_data = await testService.getTraceabilityMatrix(projectId)
-        const matrix = matrix_data.data
+        const response = await testService.getTraceabilityMatrix(projectId)
+        // Handle the response structure
+        const matrix = response.data || response
         set({ traceabilityMatrix: matrix, loading: false })
         return matrix
       } catch (error) {

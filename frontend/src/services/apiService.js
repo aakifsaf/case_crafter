@@ -43,6 +43,7 @@ export const testService = {
       params: { format },
       responseType: 'blob'
     }),
-  updateTestCase: (testCaseId, data) => 
-    apiClient.put(`/test-cases/${testCaseId}`, data),
+  // Note: The backend doesn't seem to have a test case update endpoint
+  // updateTestCase: (testCaseId, data) => 
+  //   apiClient.put(`/test-cases/${testCaseId}`, data),
 }
