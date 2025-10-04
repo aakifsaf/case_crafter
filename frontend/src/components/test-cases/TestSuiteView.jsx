@@ -7,47 +7,49 @@ import {
   ChartBarIcon, 
   DocumentArrowDownIcon,
   EyeIcon,
-  EyeSlashIcon,
   FolderIcon,
   DocumentTextIcon,
   CogIcon
 } from '@heroicons/react/24/outline'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-  const navigation = [
+
+const navigation = [
   { name: 'Overview', href: '', icon: FolderIcon },
   { name: 'Documents', href: 'documents', icon: DocumentTextIcon },
   { name: 'Test Suite', href: 'test-suite', icon: ChartBarIcon },
   { name: 'Settings', href: 'settings', icon: CogIcon },
 ]
+
 export const TestSuiteView = ({ }) => {
-  const { testSuites, fetchTraceabilityMatrix, generateTestCases, loading, fetchTestSuite } = useProjectStore()
+  const { testSuites, fetchTraceabilityMatrix, generateTestCases, loading, fetchTestSuite, documents } = useProjectStore() // Add documents to destructuring
   const [selectedTestSuite, setSelectedTestSuite] = useState(null)
   const [showExportPanel, setShowExportPanel] = useState(false)
   const [viewMode, setViewMode] = useState('visualization')
   const [isHovered, setIsHovered] = useState({})
   const { projectId } = useParams()
   const [activeTab, setActiveTab] = useState('')
+  const location = useLocation() 
+  const [ generatingTests, setGeneratingTests ] = useState(false)
 
-
-useEffect(() => {
-  const fetchProjectData = async () => {
-    if (projectId) {
-      console.log('🔄 Fetching project data for:', projectId)
-      try {
-        await Promise.all([
-          fetchTraceabilityMatrix(projectId),
-          fetchTestSuite(projectId)
-        ])
-        console.log('✅ All project data fetched successfully')
-      } catch (error) {
-        console.error('❌ Error fetching project data:', error)
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      if (projectId) {
+        console.log('🔄 Fetching project data for:', projectId)
+        try {
+          await Promise.all([
+            fetchTraceabilityMatrix(projectId),
+            fetchTestSuite(projectId)
+          ])
+          console.log('✅ All project data fetched successfully')
+        } catch (error) {
+          console.error('❌ Error fetching project data:', error)
+        }
       }
     }
-  }
 
-  fetchProjectData()
-}, [projectId, fetchTraceabilityMatrix, fetchTestSuite])
+    fetchProjectData()
+  }, [projectId, fetchTraceabilityMatrix, fetchTestSuite])
 
   useEffect(() => {
     const pathSegments = location.pathname.split('/')
@@ -55,16 +57,32 @@ useEffect(() => {
     setActiveTab(currentTab === projectId ? '' : currentTab)
   }, [location.pathname, projectId])
 
+  // FIXED: Move useProjectStore.getState() inside the function
   const handleGenerateAllTests = async () => {
-    const { documents } = useProjectStore.getState()
+    console.log('🔄 Generate All Tests button clicked')
+    
+    // Get current documents from store (already destructured above)
     const processedDocuments = documents.filter(doc => doc.status === 'processed')
+    
+    if (processedDocuments.length === 0) {
+      alert('No processed documents found. Please upload and process documents first.')
+      return
+    }
+    setGeneratingTests(true)
+    console.log(`📄 Processing ${processedDocuments.length} documents`)
     
     for (const doc of processedDocuments) {
       try {
+        console.log(`🚀 Generating tests for document: ${doc.filename}`)
         await generateTestCases(doc.id)
+        // Refresh test suite after generation
         await fetchTestSuite(projectId)
+        console.log(`✅ Successfully generated tests for ${doc.filename}`)
       } catch (error) {
-        console.error(`Failed to generate tests for document ${doc.id}:`, error)
+        console.error(`❌ Failed to generate tests for document ${doc.id}:`, error)
+        alert(`Failed to generate tests for ${doc.filename}. Please try again.`)
+      } finally {
+        setGeneratingTests(false)
       }
     }
   }
@@ -74,7 +92,6 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
       {/* Header */}
-      {/* Project Header */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -175,15 +192,15 @@ useEffect(() => {
 
           <button
             onClick={handleGenerateAllTests}
-            disabled={loading}
+            disabled={generatingTests}
             onMouseEnter={() => setIsHovered(prev => ({...prev, generate: true}))}
             onMouseLeave={() => setIsHovered(prev => ({...prev, generate: false}))}
             className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100"
           >
-            {loading ? (
+            {generatingTests ? (
               <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
             ) : null}
-            Generate All Tests
+            {generatingTests ? 'Generating...' : 'Generate All Tests'}
           </button>
         </div>
       </div>
@@ -217,7 +234,7 @@ useEffect(() => {
           <TestCaseVisualization projectId={projectId} />
         ) : (
           <TestCaseList 
-            testSuites={ testSuites}
+            testSuites={testSuites}
             projectId={projectId}
           />
         )}

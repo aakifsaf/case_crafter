@@ -16,7 +16,7 @@ import {
 const navigation = [
   { name: 'Projects', href: '/projects', icon: FolderIcon },
   { name: 'Templates', href: '/templates', icon: DocumentDuplicateIcon },
-  { name: 'Upload BRD', href: '/upload', icon: DocumentArrowUpIcon },
+  { name: 'Upload BRD', href: '/quick-upload', icon: DocumentArrowUpIcon },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ]
