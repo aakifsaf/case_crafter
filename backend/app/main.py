@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.models.database import create_tables, get_db
 from app.api.endpoints import projects, documents, test_cases, auth
+from app.api.endpoints import analytics, upload, templates, settings as settings_router
 from contextlib import asynccontextmanager
 import uvicorn
 
@@ -38,6 +39,11 @@ app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["authenticatio
 app.include_router(projects.router, prefix=settings.API_V1_STR, tags=["projects"])
 app.include_router(documents.router, prefix=settings.API_V1_STR, tags=["documents"])
 app.include_router(test_cases.router, prefix=settings.API_V1_STR, tags=["test-cases"])
+app.include_router(templates.router, prefix=settings.API_V1_STR, tags=["templates"])
+app.include_router(analytics.router, prefix=settings.API_V1_STR, tags=["analytics"])
+app.include_router(upload.router, prefix=settings.API_V1_STR, tags=["upload"])
+app.include_router(settings_router.router, prefix=settings.API_V1_STR, tags=["settings"])
+
 
 @app.get("/")
 async def root():

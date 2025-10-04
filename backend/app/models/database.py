@@ -117,6 +117,49 @@ class TestSuite(Base):
     document = relationship("Document", back_populates="test_suites")
     test_cases = relationship("TestCase", back_populates="test_suite", cascade="all, delete-orphan")
 
+class Template(Base):
+    __tablename__ = "templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    category = Column(String(100), default="functional")
+    content = Column(JSON, nullable=False)  # Stores template structure
+    test_cases_count = Column(Integer, default=0)
+    usage_count = Column(Integer, default=0)
+    is_public = Column(Integer, default=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="templates")
+    applied_projects = relationship("TemplateApplication", back_populates="template")
+
+class TemplateApplication(Base):
+    __tablename__ = "template_applications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    template_id = Column(Integer, ForeignKey("templates.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    applied_at = Column(DateTime(timezone=True), server_default=func.now())
+    test_cases_created = Column(Integer, default=0)
+
+    # Relationships
+    template = relationship("Template", back_populates="applied_projects")
+    project = relationship("Project")
+
+class UserActivity(Base):
+    __tablename__ = "user_activities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False)
+    activity_type = Column(String(100), nullable=False)  # 'upload', 'generate', 'export'
+    description = Column(String(500))
+    project_id = Column(Integer, nullable=True)
+    meta_data = Column(JSON)  # Additional data about the activity
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 # Database dependency
 def get_db():
     db = SessionLocal()
