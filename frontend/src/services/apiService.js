@@ -89,6 +89,10 @@ export const testService = {
     apiClient.get(`/projects/${projectId}/test-suite`),
   getTraceabilityMatrix: (projectId) => 
     apiClient.get(`/projects/${projectId}/traceability-matrix`),
+  semanticSearch: async (projectId, query) => 
+    apiClient.get(`/projects/${projectId}/semantic-search`, { params: { q: query } }),
+  getImpactAnalysis: async (projectId, requirementId) => 
+    apiClient.get(`/projects/${projectId}/impact-analysis/${requirementId}`),
   exportTestSuite: (testSuiteId, format) => 
     apiClient.get(`/test-suites/${testSuiteId}/export`, {
       params: { format },

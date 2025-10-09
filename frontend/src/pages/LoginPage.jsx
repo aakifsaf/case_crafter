@@ -57,7 +57,7 @@ export const LoginPage = () => {
           <div className="text-center">
             <div className="mx-auto h-20 w-20 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg mb-6 relative">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-2xl animate-pulse"></div>
-              <span className="text-white font-bold text-3xl relative z-10">AQ</span>
+              <span className="text-white font-bold text-3xl relative z-10">CC</span>
               <SparklesIcon className="h-5 w-5 text-cyan-200 absolute -top-1 -right-1 animate-ping" />
             </div>
             <h2 className="mt-2 text-4xl font-bold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">

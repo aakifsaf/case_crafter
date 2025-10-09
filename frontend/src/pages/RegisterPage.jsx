@@ -103,7 +103,7 @@ export const RegisterPage = () => {
         {/* Logo with glow effect */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/50 mb-6">
-            <span className="text-white font-bold text-2xl tracking-tighter">AQ</span>
+            <span className="text-white font-bold text-3xl tracking-tighter">CC</span>
           </div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
             Create Your Account
@@ -147,22 +147,6 @@ export const RegisterPage = () => {
                   className="w-full px-4 py-3 bg-slate-800/40 border border-slate-600/30 rounded-xl text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/30 transition-all duration-300"
                   placeholder="John Doe"
                   value={formData.name}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="company" className="block text-sm font-medium text-slate-300 mb-2">
-                  Company (Optional)
-                </label>
-                <input
-                  id="company"
-                  name="company"
-                  type="text"
-                  className="w-full px-4 py-3 bg-slate-800/40 border border-slate-600/30 rounded-xl text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/30 transition-all duration-300"
-                  placeholder="Your Company"
-                  value={formData.company}
                   onChange={handleChange}
                   disabled={loading}
                 />

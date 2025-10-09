@@ -4,11 +4,15 @@ import json
 import logging
 from datetime import datetime
 import re
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 client = AsyncOpenAI(
-    api_key="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",
+    api_key=os.getenv("API_KEY"),
     base_url="https://openrouter.ai/api/v1"
 )
 

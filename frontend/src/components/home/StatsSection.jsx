@@ -1,6 +1,6 @@
 export const StatsSection = () => {
   const stats = [
-    { label: 'Projects Completed', value: '500+', suffix: '' },
+    { label: 'Projects Completed', value: '500', suffix: '+' },
     { label: 'Test Cases Generated', value: '50K', suffix: '+' },
     { label: 'Time Saved', value: '90', suffix: '%' },
     { label: 'Coverage Improvement', value: '300', suffix: '%' },

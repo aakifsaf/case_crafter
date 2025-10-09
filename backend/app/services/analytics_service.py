@@ -36,7 +36,7 @@ class AnalyticsService:
                     self.db.query(Project.id).filter(Project.user_id == user_id)
                 ),
                 Document.uploaded_at >= start_date,
-                Document.status == 'processed'  # Only count successfully processed documents
+                Document.status == 'processed' or Document.status == 'enhanced'  # Only count successfully processed documents
             )
         ).count()
         

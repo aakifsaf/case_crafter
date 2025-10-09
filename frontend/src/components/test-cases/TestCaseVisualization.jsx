@@ -96,11 +96,6 @@ return (
           <TraceabilityGraph matrix={traceabilityMatrix} />
         </div>
       </div>
-
-      {/* Test Case List */}
-      <div className="bg-gray-800/30 backdrop-blur-md rounded-2xl border border-gray-700/50 p-8 transform transition-all duration-500 hover:border-cyan-500/30">
-        <TestCaseList testSuites={testSuites} />
-      </div>
     </div>
   )
 }

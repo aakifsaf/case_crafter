@@ -64,7 +64,7 @@ export const TestSuiteView = ({ }) => {
     console.log('🔄 Generate All Tests button clicked')
     
     // Get current documents from store (already destructured above)
-    const processedDocuments = documents.filter(doc => doc.status === 'processed')
+    const processedDocuments = documents.filter(doc => doc.status === 'processed'|| 'enhanced')
     
     if (processedDocuments.length === 0) {
       alert('No processed documents found. Please upload and process documents first.')

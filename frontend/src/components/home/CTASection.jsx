@@ -9,7 +9,7 @@ export const CTASection = () => {
           <div className="flex flex-col lg:flex-row items-center justify-between">
             <div className="lg:w-1/2 text-center lg:text-left mb-10 lg:mb-0" data-aos="fade-right">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Ready to transform your <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">QA process</span>?
+                Ready to transform your <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">QA process </span>?
               </h2>
               <p className="text-lg text-cyan-100 max-w-xl">
                 Start generating comprehensive test cases in minutes, not weeks. No credit card required.

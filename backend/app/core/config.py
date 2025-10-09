@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ]
     
     # AI/ML Services
-    OPENAI_API_KEY: Optional[str] = None
+    API_KEY: Optional[str] = None
     HUGGINGFACE_API_KEY: Optional[str] = None
     
     # File Upload

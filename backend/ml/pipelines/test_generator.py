@@ -7,11 +7,14 @@ from dataclasses import dataclass
 from .traceability_engine import TraceabilityEngine 
 from app.models.database import Document
 from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 @dataclass
 class OpenRouterConfig:
-    api_key: str = "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"
+    api_key: str = os.getenv("API_KEY")
     base_url: str = "https://openrouter.ai/api/v1"
     model: str = "openai/gpt-3.5-turbo"
 

@@ -37,8 +37,14 @@ export const ProjectOverview = ({ projectId }) => {
     if (!traceabilityMatrix) return 0
     const totalRequirements = traceabilityMatrix.requirements.length
     const coveredRequirements = traceabilityMatrix.requirements.filter(
-      req => req.test_cases && req.test_cases.length > 0
-    ).length
+      req => {
+        // Find links for this requirement
+        const requirementLinks = traceabilityMatrix.links.filter(
+          link => link.requirement_id === req.id
+        );
+        return requirementLinks.length > 0;
+      }
+    ).length;
     return Math.round((coveredRequirements / totalRequirements) * 100)
   }
 

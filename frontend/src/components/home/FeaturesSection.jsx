@@ -55,7 +55,7 @@ export const FeaturesSection = () => {
         <div className="text-center mb-16" data-aos="fade-up">
           <h2 className="text-base font-semibold tracking-wide text-cyan-400 uppercase">Features</h2>
           <p className="mt-2 text-4xl md:text-5xl font-bold text-white">
-            Why Choose <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">AUTOMAGIC QA</span>?
+            Why Choose <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">CASE CRAFTER AI</span>?
           </p>
           <p className="mt-4 max-w-2xl text-xl text-blue-200 mx-auto">
             Transform your QA process with cutting-edge AI technology that understands your business needs.
