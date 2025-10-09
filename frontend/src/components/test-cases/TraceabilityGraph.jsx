@@ -53,15 +53,23 @@ export const TraceabilityGraph = ({ matrix }) => {
   }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      className="space-y-6"
-    >
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        <AnimatePresence>
-          {matrix.requirements.map((requirement, index) => (
+  <motion.div
+    initial="hidden"
+    animate="visible"
+    variants={containerVariants}
+    className="space-y-6"
+  >
+    <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+      <AnimatePresence>
+        {matrix.requirements.map((requirement, index) => {
+          // Calculate test cases for this requirement from links
+          const testCasesForRequirement = matrix.links.filter(
+            link => link.requirement_id === requirement.id
+          );
+          const testCasesCount = testCasesForRequirement.length;
+          const isCovered = testCasesCount > 0;
+
+          return (
             <motion.div
               key={requirement.id}
               variants={itemVariants}
@@ -103,12 +111,12 @@ export const TraceabilityGraph = ({ matrix }) => {
                         <div className={`
                           inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                           transition-all duration-200
-                          ${requirement.test_cases?.length > 0
+                          ${isCovered
                             ? 'bg-emerald-400/10 text-emerald-400 ring-1 ring-emerald-400/20'
                             : 'bg-rose-400/10 text-rose-400 ring-1 ring-rose-400/20'
                           }
                         `}>
-                          {requirement.test_cases?.length > 0 ? (
+                          {isCovered ? (
                             <>
                               <CheckBadgeIcon className="w-4 h-4 mr-1" />
                               Covered
@@ -120,12 +128,16 @@ export const TraceabilityGraph = ({ matrix }) => {
                             </>
                           )}
                         </div>
+                        {/* Requirement Type Badge */}
+                        <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-400/10 text-blue-400 ring-1 ring-blue-400/20">
+                          {requirement.type}
+                        </div>
                       </div>
                     </div>
                     <div className={`
                       flex items-center justify-center w-12 h-12 rounded-xl
                       transition-all duration-300
-                      ${requirement.test_cases?.length > 0
+                      ${isCovered
                         ? 'bg-emerald-400/10 text-emerald-400'
                         : 'bg-rose-400/10 text-rose-400'
                       }
@@ -134,7 +146,7 @@ export const TraceabilityGraph = ({ matrix }) => {
                         : 'scale-100'
                       }
                     `}>
-                      {requirement.test_cases?.length > 0 ? (
+                      {isCovered ? (
                         <CheckBadgeIcon className="w-6 h-6" />
                       ) : (
                         <XCircleIcon className="w-6 h-6" />
@@ -147,10 +159,10 @@ export const TraceabilityGraph = ({ matrix }) => {
                     <div className="flex items-center space-x-2 text-gray-400">
                       <DocumentTextIcon className="w-4 h-4" />
                       <span className="text-sm">
-                        {requirement.test_cases?.length || 0} test cases
+                        {testCasesCount} test cases
                       </span>
                     </div>
-                    {requirement.test_cases?.length > 0 && (
+                    {isCovered && (
                       <motion.div
                         whileHover={{ rotate: 180 }}
                         transition={{ duration: 0.3 }}
@@ -162,59 +174,71 @@ export const TraceabilityGraph = ({ matrix }) => {
                   </div>
 
                   {/* Progress bar */}
-                  {requirement.test_cases?.length > 0 && (
+                  {isCovered && (
                     <div className="mt-4">
                       <div className="w-full bg-gray-700/50 rounded-full h-2">
                         <div 
                           className="bg-gradient-to-r from-cyan-400 to-purple-500 h-2 rounded-full transition-all duration-1000"
                           style={{ 
-                            width: `${Math.min((requirement.test_cases.length / 10) * 100, 100)}%` 
+                            width: `${Math.min((testCasesCount / 5) * 100, 100)}%` 
                           }}
                         />
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Test coverage strength
                       </div>
                     </div>
                   )}
                 </div>
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+          );
+        })}
+      </AnimatePresence>
+    </div>
 
-      {/* Summary card */}
-      <motion.div
-        variants={itemVariants}
-        className="rounded-2xl p-6 backdrop-blur-xl
-                 bg-gradient-to-br from-gray-800/70 to-gray-900/70
-                 border border-gray-700/50 shadow-2xl"
-      >
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white mb-2">
-              {matrix.requirements.length}
-            </div>
-            <div className="text-sm text-gray-400">Total Requirements</div>
+    {/* Summary card */}
+    <motion.div
+      variants={itemVariants}
+      className="rounded-2xl p-6 backdrop-blur-xl
+               bg-gradient-to-br from-gray-800/70 to-gray-900/70
+               border border-gray-700/50 shadow-2xl"
+    >
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="text-center">
+          <div className="text-3xl font-bold text-white mb-2">
+            {matrix.requirements.length}
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-emerald-400 mb-2">
-              {matrix.requirements.filter(r => r.test_cases?.length > 0).length}
-            </div>
-            <div className="text-sm text-gray-400">Covered</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-rose-400 mb-2">
-              {matrix.requirements.filter(r => !r.test_cases?.length).length}
-            </div>
-            <div className="text-sm text-gray-400">Not Covered</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-cyan-400 mb-2">
-              {Math.round((matrix.requirements.filter(r => r.test_cases?.length > 0).length / matrix.requirements.length) * 100)}%
-            </div>
-            <div className="text-sm text-gray-400">Coverage Rate</div>
-          </div>
+          <div className="text-sm text-gray-400">Total Requirements</div>
         </div>
-      </motion.div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-emerald-400 mb-2">
+            {matrix.requirements.filter(req => 
+              matrix.links.some(link => link.requirement_id === req.id)
+            ).length}
+          </div>
+          <div className="text-sm text-gray-400">Covered</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-rose-400 mb-2">
+            {matrix.requirements.filter(req => 
+              !matrix.links.some(link => link.requirement_id === req.id)
+            ).length}
+          </div>
+          <div className="text-sm text-gray-400">Not Covered</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-cyan-400 mb-2">
+            {Math.round((
+              matrix.requirements.filter(req => 
+                matrix.links.some(link => link.requirement_id === req.id)
+              ).length / matrix.requirements.length
+            ) * 100)}%
+          </div>
+          <div className="text-sm text-gray-400">Coverage Rate</div>
+        </div>
+      </div>
     </motion.div>
-  )
+  </motion.div>
+)
 }

@@ -82,7 +82,7 @@ class AIRequirementEnhancer:
         
         try:
             response = await client.chat.completions.create(
-                model="deepseek/deepseek-chat-v3.1:free",
+                model="openai/gpt-3.5-turbo",
                 messages=[
                     {
                         "role": "system", 

@@ -21,7 +21,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 class TestService:
     def __init__(self, db: Session):
         self.db = db
-        self.test_generator = AdvancedTestGenerator()
+        self.test_generator = AdvancedTestGenerator(self.db)
         self.traceability_engine = TraceabilityEngine()
 
     async def generate_test_cases(self, document_id: int) -> Dict[str, Any]:
@@ -45,7 +45,7 @@ class TestService:
         } for req in requirements]
 
         # Generate test suite
-        test_suite = self.test_generator.generate_test_suite(requirement_data)
+        test_suite = self.test_generator.generate_test_suite(requirement_data, document_id)
 
         # Create test suite record
         db_test_suite = TestSuite(
@@ -76,7 +76,7 @@ class TestService:
 
         # Build traceability matrix
         traceability_matrix = self.traceability_engine.build_traceability_matrix(
-            requirement_data, test_suite['test_cases']
+            requirement_data, test_suite['test_cases'], project_id=document.project_id
         )
 
         return {
@@ -116,7 +116,23 @@ class TestService:
         return result
 
     async def get_traceability_matrix(self, project_id: int) -> Dict[str, Any]:
-        # Get all requirements and test cases for the project
+        """Get traceability matrix using ChromaDB"""
+        try:
+            # Use ChromaDB to get the matrix
+            matrix = self.traceability_engine.get_project_traceability_matrix(project_id)
+            
+            # Fallback to database if ChromaDB returns empty
+            if not matrix['requirements']:
+                matrix = await self._get_traceability_matrix_from_db(project_id)
+            
+            return matrix
+            
+        except Exception as e:
+            print(f"Error getting traceability matrix: {e}")
+            return await self._get_traceability_matrix_from_db(project_id)
+    
+    async def _get_traceability_matrix_from_db(self, project_id: int) -> Dict[str, Any]:
+        """Fallback to database if ChromaDB fails"""
         documents = self.db.query(Document).filter(Document.project_id == project_id).all()
         
         requirements = []
@@ -139,7 +155,8 @@ class TestService:
         
         return {
             "requirements": requirements,
-            "test_cases": test_cases
+            "test_cases": test_cases,
+            "links": []  # ChromaDB provides better linking
         }
 
     async def export_test_suite(self, test_suite_id: int, format: str = "excel"):

@@ -4,28 +4,36 @@ import re
 import requests
 import os
 from dataclasses import dataclass
+from .traceability_engine import TraceabilityEngine 
+from app.models.database import Document
+from sqlalchemy.orm import Session
+
 
 @dataclass
 class OpenRouterConfig:
     api_key: str = "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"
     base_url: str = "https://openrouter.ai/api/v1"
-    model: str = "deepseek/deepseek-chat-v3.1:free"
+    model: str = "openai/gpt-3.5-turbo"
 
 class AdvancedTestGenerator:
-    def __init__(self, config: OpenRouterConfig = None):
+    def __init__(self, db: Session, config: OpenRouterConfig = None):
         self.config = config or OpenRouterConfig()
         self.template_manager = TestTemplateManager()
+        self.db = db
         
-    def generate_test_suite(self, requirements: List[Dict]) -> Dict:
+    def generate_test_suite(self, requirements: List[Dict], document_id: int) -> Dict:
         """Generate comprehensive test suite using DeepSeek model in a single API call"""
         try:
+            document = self.db.query(Document).filter(Document.id == document_id).first()
+            project_id = document.project_id if document else None
             # Generate everything in one API call
             ai_response = self._generate_complete_test_suite_ai(requirements)
+            traceability_engine = TraceabilityEngine()
             
             test_suite = {
                 'test_cases': ai_response.get('test_cases', []),
                 'test_scenarios': ai_response.get('test_scenarios', []),
-                'traceability_matrix': self._build_traceability_matrix(ai_response.get('test_cases', [])),
+                'traceability_matrix': traceability_engine.build_traceability_matrix(requirements, ai_response.get('test_cases', []), project_id),
                 'coverage_analysis': self._analyze_coverage(requirements, ai_response.get('test_cases', []))
             }
             
@@ -62,7 +70,7 @@ class AdvancedTestGenerator:
         {{
             "test_cases": [
                 {{
-                    "id": "auto_increment_starting_from_1",
+                    "id": "1",
                     "requirement_id": "requirement_id_from_above",
                     "name": "descriptive test case name",
                     "description": "detailed description",

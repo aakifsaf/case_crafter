@@ -27,6 +27,26 @@ async def get_traceability_matrix(project_id: int, db: Session = Depends(get_db)
     matrix = await service.get_traceability_matrix(project_id)
     return matrix
 
+@router.get("/projects/{project_id}/semantic-search")
+async def semantic_search_requirements(
+    project_id: int, 
+    query: str,
+    db: Session = Depends(get_db)
+):
+    service = TestService(db)
+    results = service.traceability_engine.semantic_search_requirements(query, project_id)
+    return {"results": results}
+
+@router.get("/projects/{project_id}/impact-analysis/{requirement_id}")
+async def get_impact_analysis(
+    project_id: int,
+    requirement_id: str,
+    db: Session = Depends(get_db)
+):
+    service = TestService(db)
+    impact = service.traceability_engine.find_impact_analysis(requirement_id, project_id)
+    return impact
+
 @router.get("/test-suites/{test_suite_id}/export")
 async def export_test_suite(test_suite_id: int, format: str = "excel", db: Session = Depends(get_db)):
     service = TestService(db)
