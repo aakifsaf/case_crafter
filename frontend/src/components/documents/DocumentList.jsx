@@ -73,14 +73,15 @@ export const DocumentList = ({ projectId }) => {
               
               <div className="flex items-center space-x-3">
                 {/* <DocumentProcessingStatus documentId={document.id} /> */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => generateTestCases(document.id)}
-                  className="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-                >
-                  Generate Tests
-                </motion.button>
+                <span className={`px-3 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${
+                    document.status === 'processed'|| document.status === 'enhanced'
+                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                      : document.status === 'processing'
+                      ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                      : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                  }`}>
+                    {document.status}
+                  </span>
               </div>
             </motion.div>
           ))}

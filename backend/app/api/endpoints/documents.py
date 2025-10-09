@@ -22,10 +22,11 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="File type not supported")
     
     document = await service.upload_document(project_id, file)
-    
+    requirements = await service.get_document_requirements(document.id)
     # Process document in background
     if background_tasks:
         background_tasks.add_task(service.process_document, document.id)
+        background_tasks.add_task(service.enhance_requirements, document.id)
     
     return document
 

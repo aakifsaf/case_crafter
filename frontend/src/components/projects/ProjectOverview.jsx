@@ -1,21 +1,37 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProjectStore } from '../../stores/useProjectStore'
 import { StatCard } from '../ui/StatCard'
-import { DocumentTextIcon, ChartBarIcon } from '@heroicons/react/24/outline'
+import { DocumentTextIcon, ChartBarIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 
 export const ProjectOverview = ({ projectId }) => {
-  const { documents, testSuites, fetchDocuments, fetchTraceabilityMatrix, traceabilityMatrix, fetchTestSuite } = useProjectStore()
+  const { 
+    documents, 
+    testSuites, 
+    fetchDocuments, 
+    fetchTraceabilityMatrix, 
+    traceabilityMatrix, 
+    fetchTestSuite,
+    refreshProjectData 
+  } = useProjectStore()
+  const [isLoading, setIsLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
+  // Load data only once when component mounts
   useEffect(() => {
-    if (projectId) {
-      fetchDocuments(projectId)
-      fetchTraceabilityMatrix(projectId)
-      fetchTestSuite(projectId)
-
+    if (projectId && (documents.length === 0 || testSuites.length === 0 || !traceabilityMatrix)) {
+      setIsLoading(true)
+      
+      Promise.all([
+        fetchDocuments(projectId),
+        fetchTraceabilityMatrix(projectId),
+        fetchTestSuite(projectId)
+      ]).finally(() => {
+        setIsLoading(false)
+      })
     }
-  }, [projectId, fetchDocuments, fetchTraceabilityMatrix, fetchTestSuite])
+  }, [projectId]) // Only depend on projectId
 
   const calculateCoverage = () => {
     if (!traceabilityMatrix) return 0
@@ -50,6 +66,22 @@ export const ProjectOverview = ({ projectId }) => {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="animate-pulse">
+          <div className="h-12 bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl w-1/3 mb-6"></div>
+          <div className="h-6 bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl w-1/2 mb-12"></div>
+          <div className="grid grid-cols-4 gap-6 mb-12">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-20 bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <motion.div 
       variants={containerVariants}
@@ -57,6 +89,14 @@ export const ProjectOverview = ({ projectId }) => {
       animate="visible"
       className="space-y-8"
     >
+      {/* Header with Refresh */}
+      <motion.div variants={itemVariants} className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Project Overview</h2>
+          <p className="text-gray-400">Real-time insights and analytics</p>
+        </div>
+      </motion.div>
+
       {/* Statistics */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -123,7 +163,7 @@ export const ProjectOverview = ({ projectId }) => {
                     </div>
                   </div>
                   <span className={`px-3 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${
-                    doc.status === 'processed' 
+                    doc.status === 'processed'|| doc.status === 'enhanced'
                       ? 'bg-green-500/20 text-green-300 border border-green-500/30'
                       : doc.status === 'processing'
                       ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'

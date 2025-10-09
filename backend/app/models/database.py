@@ -27,6 +27,8 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    templates = relationship("Template", back_populates="user")
+
 class Project(Base):
     __tablename__ = "projects"
     

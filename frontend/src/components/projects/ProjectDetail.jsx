@@ -10,7 +10,8 @@ import {
   DocumentTextIcon,
   ChartBarIcon,
   FolderIcon,
-  CogIcon
+  CogIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -24,30 +25,60 @@ const navigation = [
 export const ProjectDetail = () => {
   const { projectId } = useParams()
   const location = useLocation()
-  const { currentProject, fetchProjects, setCurrentProject, loading } = useProjectStore()
+  const { 
+    currentProject, 
+    fetchProjects, 
+    setCurrentProject, 
+    loading,
+    refreshProjectData 
+  } = useProjectStore()
   const { user } = useAuthStore()
   const [activeTab, setActiveTab] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
 
+  // Load project data only once
   useEffect(() => {
-    const loadProject = async () => {
+    const loadProjectData = async () => {
       await fetchProjects()
       const project = useProjectStore.getState().projects.find(p => p.id === parseInt(projectId))
-      console.log('Loaded project:', project)
       if (project) {
         setCurrentProject(project)
-        console.log('Current project set to:', currentProject)
+        // These will use cached data if available
+        await Promise.all([
+          fetchDocuments(projectId),
+          fetchTestSuite(projectId),
+          fetchTraceabilityMatrix(projectId)
+        ])
       }
     }
-    loadProject()
-  }, [projectId, fetchProjects, setCurrentProject])
+    
+    if (projectId) {
+      loadProjectData()
+    }
+  }, [projectId])
 
+
+  // Set active tab based on route
   useEffect(() => {
     const pathSegments = location.pathname.split('/')
     const currentTab = pathSegments[pathSegments.length - 1]
     setActiveTab(currentTab === projectId ? '' : currentTab)
   }, [location.pathname, projectId])
 
-  if ( !currentProject) {
+  const handleRefresh = async () => {
+    if (!projectId) return
+    
+    setRefreshing(true)
+    try {
+      await refreshProjectData(projectId)
+    } catch (error) {
+      console.error('Refresh failed:', error)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  if (!currentProject) {
     return (
       <div className="max-w-7xl mx-auto px-4">
         <div className="animate-pulse">
@@ -72,10 +103,26 @@ export const ProjectDetail = () => {
         transition={{ duration: 0.5 }}
         className="mb-12"
       >
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-          {currentProject.name}
-        </h1>
-        <p className="text-gray-300 mt-4 text-lg max-w-2xl">{currentProject.description}</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              {currentProject.name}
+            </h1>
+            <p className="text-gray-300 mt-4 text-lg max-w-2xl">{currentProject.description}</p>
+          </div>
+          
+          {/* Refresh Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-700/50 hover:border-cyan-500/30 transition-all duration-300 disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </motion.button>
+        </div>
         
         {/* Navigation Tabs */}
         <div className="mt-10 border-b border-gray-700/50">

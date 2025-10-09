@@ -4,7 +4,7 @@ import { DocumentUpload } from './DocumentUpload'
 import { DocumentList } from './DocumentList'
 import { DocumentProcessingStatus } from './DocumentProcessingStatus'
 import { ArrowUpTrayIcon, XMarkIcon, FolderIcon, DocumentTextIcon,
-  ChartBarIcon, CogIcon
+  ChartBarIcon, CogIcon, ArrowPathIcon
  } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 import { useParams, Link } from 'react-router-dom'
@@ -16,7 +16,8 @@ import { useParams, Link } from 'react-router-dom'
   { name: 'Settings', href: 'settings', icon: CogIcon },
 ]
 export const DocumentManager = ({ }) => {
-  const { documents, fetchDocuments, loading } = useProjectStore()
+  const { documents, fetchDocuments, loading, refreshProjectData } = useProjectStore()
+  const [refreshing, setRefreshing] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [selectedDocument, setSelectedDocument] = useState(null)
   const { projectId } = useParams()
@@ -44,6 +45,7 @@ export const DocumentManager = ({ }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+
         
         {/* Navigation Tabs */}
         <div className=" border-b border-gray-700/50">

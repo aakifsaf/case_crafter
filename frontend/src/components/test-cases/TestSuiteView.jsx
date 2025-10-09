@@ -9,7 +9,8 @@ import {
   EyeIcon,
   FolderIcon,
   DocumentTextIcon,
-  CogIcon
+  CogIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
 import { useParams, Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -22,7 +23,8 @@ const navigation = [
 ]
 
 export const TestSuiteView = ({ }) => {
-  const { testSuites, fetchTraceabilityMatrix, generateTestCases, loading, fetchTestSuite, documents } = useProjectStore() // Add documents to destructuring
+  const { testSuites, fetchTraceabilityMatrix, generateTestCases, loading, fetchTestSuite, documents, refreshProjectData } = useProjectStore() 
+  const [refreshing, setRefreshing] = useState(false)
   const [selectedTestSuite, setSelectedTestSuite] = useState(null)
   const [showExportPanel, setShowExportPanel] = useState(false)
   const [viewMode, setViewMode] = useState('visualization')
@@ -86,6 +88,7 @@ export const TestSuiteView = ({ }) => {
       }
     }
   }
+
 
   const currentTestSuite = selectedTestSuite || testSuites[0]
 

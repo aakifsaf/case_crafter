@@ -1,233 +1,382 @@
 from typing import List, Dict
 import json
 import re
+import requests
+import os
+from dataclasses import dataclass
+
+@dataclass
+class OpenRouterConfig:
+    api_key: str = "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"
+    base_url: str = "https://openrouter.ai/api/v1"
+    model: str = "deepseek/deepseek-chat-v3.1:free"
 
 class AdvancedTestGenerator:
-    def __init__(self):
-        # In production, you would load actual ML models here
-        # For now, we'll use rule-based generation
+    def __init__(self, config: OpenRouterConfig = None):
+        self.config = config or OpenRouterConfig()
         self.template_manager = TestTemplateManager()
-    
+        
     def generate_test_suite(self, requirements: List[Dict]) -> Dict:
-        test_suite = {
-            'test_cases': [],
-            'test_scenarios': [],
-            'traceability_matrix': {},
-            'coverage_analysis': {}
-        }
+        """Generate comprehensive test suite using DeepSeek model in a single API call"""
+        try:
+            # Generate everything in one API call
+            ai_response = self._generate_complete_test_suite_ai(requirements)
+            
+            test_suite = {
+                'test_cases': ai_response.get('test_cases', []),
+                'test_scenarios': ai_response.get('test_scenarios', []),
+                'traceability_matrix': self._build_traceability_matrix(ai_response.get('test_cases', [])),
+                'coverage_analysis': self._analyze_coverage(requirements, ai_response.get('test_cases', []))
+            }
+            
+            return test_suite
+            
+        except Exception as e:
+            print(f"AI test suite generation failed: {e}")
+            return self._generate_fallback_test_suite(requirements)
+    
+    def _generate_complete_test_suite_ai(self, requirements: List[Dict]) -> Dict:
+        """Generate complete test suite in a single API call"""
+        prompt = self._create_complete_test_suite_prompt(requirements)
+        response = self._call_deepseek(prompt)
+        return json.loads(response)
+    
+    def _create_complete_test_suite_prompt(self, requirements: List[Dict]) -> str:
+        """Create optimized prompt for complete test suite generation"""
+        requirements_summary = json.dumps([
+            {
+                'id': req['id'],
+                'text': req['original_text'],
+                'type': req.get('type', 'functional')
+            }
+            for req in requirements
+        ], indent=2)
         
-        test_case_id = 1
-        for req in requirements:
-            test_cases = self._generate_test_cases_for_requirement(req, test_case_id)
-            test_suite['test_cases'].extend(test_cases)
-            test_suite['traceability_matrix'][req['id']] = [
-                tc['id'] for tc in test_cases
+        return f"""
+        Generate a complete test suite for the following software requirements in a single response.
+        
+        REQUIREMENTS:
+        {requirements_summary}
+        
+        Generate the complete test suite in this exact JSON format:
+        {{
+            "test_cases": [
+                {{
+                    "id": "auto_increment_starting_from_1",
+                    "requirement_id": "requirement_id_from_above",
+                    "name": "descriptive test case name",
+                    "description": "detailed description",
+                    "test_type": "positive|negative|edge|security|performance",
+                    "priority": "high|medium|low",
+                    "test_steps": ["step1", "step2", "step3"],
+                    "expected_results": "clear expected outcome",
+                    "test_data": "data for testing",
+                    "preconditions": ["precondition1", "precondition2"],
+                    "ai_generated": true
+                }}
+            ],
+            "test_scenarios": [
+                {{
+                    "name": "integration scenario name",
+                    "description": "end-to-end user journey description",
+                    "test_cases": ["test_case_id1", "test_case_id2", ...],
+                    "type": "integration|e2e|workflow",
+                    "business_flow": "description of business process",
+                    "success_criteria": ["criteria1", "criteria2"]
+                }}
             ]
-            test_case_id += len(test_cases)
+        }}
         
-        test_suite['test_scenarios'] = self._generate_integration_scenarios(test_suite['test_cases'])
-        test_suite['coverage_analysis'] = self._analyze_coverage(requirements, test_suite['traceability_matrix'])
+        IMPORTANT INSTRUCTIONS:
+        1. Generate 3 test cases per requirement (mix of positive, negative, edge cases)
+        2. Include security test cases for requirements that involve data handling, authentication, or user input
+        3. Include performance test cases for requirements that involve data processing, calculations, or system resources
+        4. Create integration scenarios that combine test cases from multiple requirements
+        5. Ensure test steps are specific, actionable, and cover the business logic
+        6. Assign appropriate priorities based on risk and importance
+        7. Make sure test cases are traceable to specific requirement IDs
         
-        return test_suite
+        For each requirement, generate:
+        - At least 1 positive test cases (valid inputs, happy path)
+        - At least 1 negative test cases (invalid inputs, error conditions)
+        - At least 1 edge case (boundary values, unusual scenarios)
+        - Security test cases if applicable
+        - Performance test cases if applicable
+        
+        For integration scenarios, focus on:
+        - Realistic user workflows
+        - End-to-end business processes
+        - Data flow between components
+        - Cross-requirement functionality
+        
+        Ensure comprehensive coverage and realistic test scenarios.
+        """
     
-    def _generate_test_cases_for_requirement(self, requirement: Dict, start_id: int) -> List[Dict]:
-        """Generate comprehensive test cases for a single requirement"""
-        test_cases = []
-        current_id = start_id
-        
-        # Positive test cases
-        positive_cases = self._generate_positive_cases(requirement, current_id)
-        test_cases.extend(positive_cases)
-        current_id += len(positive_cases)
-        
-        # Negative test cases
-        negative_cases = self._generate_negative_cases(requirement, current_id)
-        test_cases.extend(negative_cases)
-        current_id += len(negative_cases)
-        
-        # Edge cases
-        edge_cases = self._generate_edge_cases(requirement, current_id)
-        test_cases.extend(edge_cases)
-        current_id += len(edge_cases)
-        
-        # Security test cases (if applicable)
-        if self._requires_security_testing(requirement):
-            security_cases = self._generate_security_cases(requirement, current_id)
-            test_cases.extend(security_cases)
-        
-        return test_cases
+    def _build_traceability_matrix(self, test_cases: List[Dict]) -> Dict:
+        """Build traceability matrix from test cases"""
+        matrix = {}
+        for test_case in test_cases:
+            req_id = test_case.get('requirement_id')
+            if req_id not in matrix:
+                matrix[req_id] = []
+            matrix[req_id].append(test_case.get('id'))
+        return matrix
     
-    def _generate_positive_cases(self, requirement: Dict, start_id: int) -> List[Dict]:
-        """Generate positive path test cases"""
-        test_cases = []
-        
-        base_name = f"Verify {requirement['original_text'][:50]}..."
-        
-        test_case = {
-            'id': start_id,
-            'requirement_id': requirement['id'],
-            'name': f"{base_name} - Positive Flow",
-            'description': f"Positive test case for: {requirement['original_text']}",
-            'test_type': 'positive',
-            'priority': 'high',
-            'test_steps': [
-                "Set up test environment",
-                "Prepare valid test data",
-                "Execute the functionality",
-                "Verify expected behavior"
-            ],
-            'expected_results': f"The system should {requirement['original_text']}",
-            'test_data': {'status': 'valid'}
-        }
-        test_cases.append(test_case)
-        
-        return test_cases
-    
-    def _generate_negative_cases(self, requirement: Dict, start_id: int) -> List[Dict]:
-        """Generate negative path test cases"""
-        test_cases = []
-        
-        base_name = f"Verify {requirement['original_text'][:50]}..."
-        
-        # Invalid input test
-        test_case = {
-            'id': start_id,
-            'requirement_id': requirement['id'],
-            'name': f"{base_name} - Invalid Input",
-            'description': f"Negative test case with invalid input for: {requirement['original_text']}",
-            'test_type': 'negative',
-            'priority': 'medium',
-            'test_steps': [
-                "Set up test environment",
-                "Prepare invalid test data",
-                "Execute the functionality",
-                "Verify error handling"
-            ],
-            'expected_results': "System should handle invalid input gracefully and show appropriate error message",
-            'test_data': {'status': 'invalid'}
-        }
-        test_cases.append(test_case)
-        
-        return test_cases
-    
-    def _generate_edge_cases(self, requirement: Dict, start_id: int) -> List[Dict]:
-        """Generate edge case test cases"""
-        test_cases = []
-        
-        base_name = f"Verify {requirement['original_text'][:50]}..."
-        
-        # Boundary test
-        test_case = {
-            'id': start_id,
-            'requirement_id': requirement['id'],
-            'name': f"{base_name} - Boundary Conditions",
-            'description': f"Edge case testing boundary conditions for: {requirement['original_text']}",
-            'test_type': 'edge',
-            'priority': 'medium',
-            'test_steps': [
-                "Set up test environment",
-                "Prepare boundary value test data",
-                "Execute the functionality",
-                "Verify boundary condition handling"
-            ],
-            'expected_results': "System should handle boundary values correctly",
-            'test_data': {'boundary': 'min_max_values'}
-        }
-        test_cases.append(test_case)
-        
-        return test_cases
-    
-    def _generate_security_cases(self, requirement: Dict, start_id: int) -> List[Dict]:
-        """Generate security test cases"""
-        test_cases = []
-        
-        if any(word in requirement['original_text'].lower() for word in ['login', 'auth', 'password', 'user']):
-            test_case = {
-                'id': start_id,
-                'requirement_id': requirement['id'],
-                'name': f"Security Test for {requirement['original_text'][:30]}",
-                'description': f"Security validation for: {requirement['original_text']}",
-                'test_type': 'security',
-                'priority': 'high',
-                'test_steps': [
-                    "Attempt SQL injection",
-                    "Test for XSS vulnerabilities",
-                    "Verify input sanitization",
-                    "Check authentication bypass"
-                ],
-                'expected_results': "System should prevent security vulnerabilities and maintain data integrity",
-                'test_data': {'security_test': True}
-            }
-            test_cases.append(test_case)
-        
-        return test_cases
-    
-    def _requires_security_testing(self, requirement: Dict) -> bool:
-        """Check if requirement needs security testing"""
-        security_keywords = ['login', 'auth', 'password', 'user', 'admin', 'privilege', 'access']
-        return any(keyword in requirement['original_text'].lower() for keyword in security_keywords)
-    
-    def _generate_integration_scenarios(self, test_cases: List[Dict]) -> List[Dict]:
-        """Generate integration test scenarios"""
-        scenarios = []
-        
-        if len(test_cases) >= 2:
-            scenario = {
-                'name': 'Integrated User Flow',
-                'description': 'Test complete user journey across multiple requirements',
-                'test_cases': [tc['id'] for tc in test_cases[:3]],  # Use first 3 test cases
-                'type': 'integration'
-            }
-            scenarios.append(scenario)
-        
-        return scenarios
-    
-    def _analyze_coverage(self, requirements: List[Dict], traceability_matrix: Dict) -> Dict:
-        """Analyze test coverage"""
+    def _analyze_coverage(self, requirements: List[Dict], test_cases: List[Dict]) -> Dict:
+        """Enhanced coverage analysis"""
         total_requirements = len(requirements)
-        covered_requirements = len([req_id for req_id in traceability_matrix if traceability_matrix[req_id]])
+        
+        # Get covered requirements from test cases
+        covered_requirement_ids = set(tc.get('requirement_id') for tc in test_cases)
+        covered_requirements = len(covered_requirement_ids)
+        
+        # Analyze coverage by requirement type
+        requirement_types = {}
+        for req in requirements:
+            req_type = req.get('type', 'unknown')
+            if req_type not in requirement_types:
+                requirement_types[req_type] = {'total': 0, 'covered': 0}
+            requirement_types[req_type]['total'] += 1
+            if req['id'] in covered_requirement_ids:
+                requirement_types[req_type]['covered'] += 1
+        
+        # Analyze test type distribution
+        test_type_distribution = {}
+        for test_case in test_cases:
+            test_type = test_case.get('test_type', 'unknown')
+            test_type_distribution[test_type] = test_type_distribution.get(test_type, 0) + 1
         
         return {
             'total_requirements': total_requirements,
             'covered_requirements': covered_requirements,
             'coverage_percentage': (covered_requirements / total_requirements * 100) if total_requirements > 0 else 0,
-            'uncovered_requirements': [req['id'] for req in requirements if not traceability_matrix.get(req['id'])]
+            'uncovered_requirements': [req['id'] for req in requirements if req['id'] not in covered_requirement_ids],
+            'coverage_by_type': {
+                req_type: {
+                    'coverage_percentage': (data['covered'] / data['total'] * 100) if data['total'] > 0 else 0,
+                    'covered': data['covered'],
+                    'total': data['total']
+                }
+                for req_type, data in requirement_types.items()
+            },
+            'test_type_distribution': test_type_distribution,
+            'total_test_cases': len(test_cases)
         }
+    
+    def _call_deepseek(self, prompt: str) -> str:
+        """Call DeepSeek model via OpenRouter API"""
+        headers = {
+            'Authorization': f'Bearer {self.config.api_key}',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://github.com/your-repo',
+            'X-Title': 'AI Test Generator'
+        }
+        
+        payload = {
+            'model': self.config.model,
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': 'You are an expert QA engineer specializing in creating comprehensive test suites. Always respond with valid JSON. Generate complete test suites including test cases and integration scenarios in a single response.'
+                },
+                {
+                    'role': 'user',
+                    'content': prompt
+                }
+            ],
+            'temperature': 0.3,
+            'response_format': {'type': 'json_object'}
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.config.base_url}/chat/completions",
+                headers=headers,
+                json=payload
+            )
+            response.raise_for_status()
+            return response.json()['choices'][0]['message']['content']
+        except Exception as e:
+            print(f"DeepSeek API error: {e}")
+            raise
+    
+    def _generate_fallback_test_suite(self, requirements: List[Dict]) -> Dict:
+        """Fallback test suite generation when AI fails"""
+        test_cases = []
+        test_case_id = 1
+        
+        for req in requirements:
+            # Generate basic test cases for each requirement
+            cases = self._generate_basic_test_cases(req, test_case_id)
+            test_cases.extend(cases)
+            test_case_id += len(cases)
+        
+        # Generate basic integration scenarios
+        test_scenarios = self._generate_basic_integration_scenarios(test_cases)
+        
+        traceability_matrix = self._build_traceability_matrix(test_cases)
+        coverage_analysis = self._analyze_coverage(requirements, test_cases)
+        
+        return {
+            'test_cases': test_cases,
+            'test_scenarios': test_scenarios,
+            'traceability_matrix': traceability_matrix,
+            'coverage_analysis': coverage_analysis
+        }
+    
+    def _generate_basic_test_cases(self, requirement: Dict, start_id: int) -> List[Dict]:
+        """Generate basic test cases as fallback"""
+        cases = []
+        current_id = start_id
+        
+        # Positive test case
+        cases.append({
+            'id': current_id,
+            'requirement_id': requirement['id'],
+            'name': f"Verify {requirement['original_text'][:50]}... - Positive",
+            'description': f"Validate successful execution: {requirement['original_text']}",
+            'test_type': 'positive',
+            'priority': 'high',
+            'test_steps': [
+                "Initialize test environment",
+                "Prepare valid input data",
+                "Execute functionality",
+                "Verify results match expectations"
+            ],
+            'expected_results': f"System successfully implements: {requirement['original_text']}",
+            'test_data': {'input_type': 'valid'},
+            'preconditions': ["System is available", "Test data is prepared"],
+            'ai_generated': False
+        })
+        current_id += 1
+        
+        # Negative test case
+        cases.append({
+            'id': current_id,
+            'requirement_id': requirement['id'],
+            'name': f"Verify {requirement['original_text'][:50]}... - Negative",
+            'description': f"Test error handling: {requirement['original_text']}",
+            'test_type': 'negative',
+            'priority': 'medium',
+            'test_steps': [
+                "Initialize test environment",
+                "Prepare invalid input data",
+                "Execute functionality with invalid data",
+                "Verify proper error handling"
+            ],
+            'expected_results': "System handles invalid input gracefully with appropriate errors",
+            'test_data': {'input_type': 'invalid'},
+            'preconditions': ["System is operational"],
+            'ai_generated': False
+        })
+        current_id += 1
+        
+        # Edge case
+        cases.append({
+            'id': current_id,
+            'requirement_id': requirement['id'],
+            'name': f"Verify {requirement['original_text'][:50]}... - Edge Case",
+            'description': f"Test boundary conditions: {requirement['original_text']}",
+            'test_type': 'edge',
+            'priority': 'low',
+            'test_steps': [
+                "Identify boundary conditions",
+                "Prepare edge case test data",
+                "Execute functionality",
+                "Verify system stability"
+            ],
+            'expected_results': "System maintains stability under edge conditions",
+            'test_data': {'edge_case': True},
+            'preconditions': ["System is in stable state"],
+            'ai_generated': False
+        })
+        
+        return cases
+    
+    def _generate_basic_integration_scenarios(self, test_cases: List[Dict]) -> List[Dict]:
+        """Generate basic integration scenarios as fallback"""
+        if len(test_cases) < 3:
+            return []
+        
+        return [{
+            'name': 'Basic End-to-End Workflow',
+            'description': 'Complete user journey testing main functionality',
+            'test_cases': [tc['id'] for tc in test_cases[:3]],
+            'type': 'integration',
+            'business_flow': 'Basic workflow covering primary requirements',
+            'success_criteria': ['All test cases pass', 'Data flows correctly']
+        }]
 
 class TestTemplateManager:
-    """Manage test case templates"""
+    """Enhanced template manager with AI suggestions"""
+    
     def __init__(self):
         self.templates = {
             'positive': self._positive_template,
             'negative': self._negative_template,
             'edge': self._edge_template,
-            'security': self._security_template
+            'security': self._security_template,
+            'performance': self._performance_template
         }
     
-    def _positive_template(self, requirement: str) -> Dict:
+    def get_ai_enhanced_template(self, requirement: Dict, test_type: str) -> Dict:
+        """Get AI-enhanced template for specific requirement"""
+        base_template = self.templates.get(test_type, self._positive_template)(requirement)
+        
+        # Add AI-suggested enhancements
+        if test_type == 'security':
+            base_template['security_considerations'] = [
+                "Input validation and sanitization",
+                "Authentication and authorization checks",
+                "Data encryption in transit and at rest",
+                "Session management security"
+            ]
+        elif test_type == 'performance':
+            base_template['performance_metrics'] = [
+                "Response time under load",
+                "Resource utilization",
+                "Throughput capacity",
+                "Concurrent user handling"
+            ]
+        
+        return base_template
+    
+    def _positive_template(self, requirement: Dict) -> Dict:
         return {
-            'name': f'Verify {requirement[:30]}...',
+            'name': f'Verify successful {requirement["original_text"]}',
             'type': 'positive',
-            'priority': 'high'
+            'priority': 'high',
+            'focus_areas': ['happy path', 'valid inputs', 'expected outcomes']
         }
     
-    def _negative_template(self, requirement: str) -> Dict:
+    def _negative_template(self, requirement: Dict) -> Dict:
         return {
-            'name': f'Verify error handling for {requirement[:30]}...',
+            'name': f'Verify error handling for {requirement["original_text"]}',
             'type': 'negative',
-            'priority': 'medium'
+            'priority': 'medium',
+            'focus_areas': ['invalid inputs', 'error conditions', 'boundary violations']
         }
     
-    def _edge_template(self, requirement: str) -> Dict:
+    def _edge_template(self, requirement: Dict) -> Dict:
         return {
-            'name': f'Verify boundary conditions for {requirement[:30]}...',
+            'name': f'Verify edge cases for {requirement["original_text"]}',
             'type': 'edge',
-            'priority': 'medium'
+            'priority': 'medium',
+            'focus_areas': ['boundary values', 'unusual scenarios', 'stress conditions']
         }
     
-    def _security_template(self, requirement: str) -> Dict:
+    def _security_template(self, requirement: Dict) -> Dict:
         return {
-            'name': f'Security test for {requirement[:30]}...',
+            'name': f'Security validation for {requirement["original_text"]}',
             'type': 'security',
-            'priority': 'high'
+            'priority': 'high',
+            'focus_areas': ['authentication', 'authorization', 'data protection', 'input validation']
+        }
+    
+    def _performance_template(self, requirement: Dict) -> Dict:
+        return {
+            'name': f'Performance testing for {requirement["original_text"]}',
+            'type': 'performance',
+            'priority': 'medium',
+            'focus_areas': ['response time', 'load handling', 'resource usage', 'scalability']
         }

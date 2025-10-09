@@ -35,8 +35,20 @@ export const TestCaseVisualization = ({ projectId }) => {
     }, 0)
   }
 
-  if (loading) {
-    return <div className="animate-pulse bg-white rounded-lg p-6 h-64"></div>
+      if ( loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="animate-pulse">
+          <div className="h-12 bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl w-1/3 mb-6"></div>
+          <div className="h-6 bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl w-1/2 mb-12"></div>
+          <div className="grid grid-cols-4 gap-6 mb-12">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-20 bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
 return (

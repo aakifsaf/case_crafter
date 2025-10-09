@@ -250,47 +250,8 @@ class TestService:
             story.append(Paragraph(f"Total Test Cases: {len(test_cases)}", info_style))
             
             story.append(Spacer(1, 20))
-            
-            # Test Cases Table
+    
             if test_cases:
-                # Table header
-                table_data = [[
-                    "ID", 
-                    "Name", 
-                    "Type", 
-                    "Priority", 
-                    "Description"
-                ]]
-                
-                # Table rows
-                for tc in test_cases:
-                    # Truncate long descriptions for table display
-                    description = (tc.description or "")[:100] + "..." if len(tc.description or "") > 100 else (tc.description or "")
-                    
-                    table_data.append([
-                        str(tc.id),
-                        tc.name[:50] + "..." if len(tc.name) > 50 else tc.name,
-                        tc.test_type,
-                        tc.priority,
-                        description
-                    ])
-                
-                # Create table
-                table = Table(table_data, colWidths=[0.5*inch, 2*inch, 0.8*inch, 0.8*inch, 2*inch])
-                table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                    ('FONTSIZE', (0, 1), (-1, -1), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
-                
-                story.append(table)
-                story.append(Spacer(1, 20))
                 
                 # Detailed Test Cases
                 detail_style = ParagraphStyle(

@@ -4,147 +4,143 @@ import aiofiles
 from typing import List, Dict
 import re
 import os
+from pathlib import Path
+import asyncio
+import openai
+import json
 
 class AdvancedDocumentProcessor:
-    def __init__(self):
+    def __init__(self, openrouter_api_key: str = None):
         self.supported_formats = ['.pdf', '.docx', '.txt']
     
     async def process_document(self, file_path: str) -> Dict:
-        """Extract and structure document content with metadata"""
-        text = await self._extract_text(file_path)
-        structured_data = self._structure_content(text)
-        requirements = self._extract_requirements(structured_data)
-        
-        return {
-            'raw_text': text,
-            'structured_data': structured_data,
-            'requirements': requirements,
-            'metadata': self._extract_metadata(text, file_path)
-        }
+        """Extract text from document and then extract requirements using AI"""
+        try:
+            # Step 1: Extract raw text from document
+            text = await self._extract_text(file_path)
+            print(f"Extracted text: {text}")
+            if not text.strip():
+                return {
+                    'success': False,
+                    'error': 'Document is empty or no text could be extracted',
+                    'raw_text': '',
+                    'metadata': {}
+                }
+            metadata = self._extract_metadata(text, file_path)
+            
+            return {
+                'success': True,
+                'raw_text': text,
+                'metadata': metadata
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'raw_text': '',
+                'metadata': {}
+            }
     
     async def _extract_text(self, file_path: str) -> str:
-        """Extract text from different file formats"""
-        file_extension = os.path.splitext(file_path)[1].lower()
+        """Extract raw text from document"""
+        file_path = await self._validate_file_path(file_path)
+        file_extension = Path(file_path).suffix.lower()
         
         if file_extension == '.pdf':
-            return self._extract_from_pdf(file_path)
+            return await self._extract_from_pdf(file_path)
         elif file_extension == '.docx':
-            return self._extract_from_docx(file_path)
+            return await self._extract_from_docx(file_path)
         elif file_extension == '.txt':
-            async with aiofiles.open(file_path, 'r', encoding='utf-8') as file:
-                return await file.read()
+            return await self._extract_from_text(file_path)
         else:
-            raise ValueError(f"Unsupported file format: {file_extension}")
+            raise ValueError(f"Unsupported format: {file_extension}")
     
-    def _extract_from_pdf(self, file_path: str) -> str:
-        """Extract text from PDF file"""
+    async def _validate_file_path(self, file_path: str) -> str:
+        """Validate file path"""
+        if not os.path.isabs(file_path):
+            file_path = os.path.abspath(file_path)
+        
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+        
+        if not os.path.isfile(file_path):
+            raise ValueError(f"Path is not a file: {file_path}")
+        
+        file_extension = Path(file_path).suffix.lower()
+        if file_extension not in self.supported_formats:
+            raise ValueError(f"Unsupported format: {file_extension}")
+        
+        return file_path
+    
+    async def _extract_from_pdf(self, file_path: str) -> str:
+        """Extract text from PDF"""
         text = ""
-        with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
-        return text
+        try:
+            with pdfplumber.open(file_path) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+            return text.strip()
+        except Exception as e:
+            raise Exception(f"PDF extraction failed: {str(e)}")
     
-    def _extract_from_docx(self, file_path: str) -> str:
-        """Extract text from DOCX file"""
-        doc = Document(file_path)
-        text = ""
-        for paragraph in doc.paragraphs:
-            text += paragraph.text + "\n"
-        return text
-    
-    def _structure_content(self, text: str) -> List[Dict]:
-        """Convert raw text to structured sections"""
-        sections = []
-        lines = text.split('\n')
-        
-        current_section = None
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-                
-            if self._is_section_header(line):
-                if current_section:
-                    sections.append(current_section)
-                current_section = {
-                    'title': line,
-                    'content': [],
-                    'level': self._get_header_level(line)
-                }
-            elif current_section:
-                current_section['content'].append(line)
-        
-        if current_section:
-            sections.append(current_section)
-        
-        return sections
-    
-    def _is_section_header(self, line: str) -> bool:
-        """Check if a line is a section header"""
-        # Simple heuristic for section headers
-        header_indicators = [
-            r'^\d+\.',  # Numbered sections: "1. Introduction"
-            r'^[A-Z][A-Z\s]{5,}',  # All caps lines
-            r'^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*:$',  # Title with colon
-        ]
-        
-        for pattern in header_indicators:
-            if re.match(pattern, line):
-                return True
-        return False
-    
-    def _get_header_level(self, line: str) -> int:
-        """Determine header level (1 for main, 2 for sub, etc.)"""
-        if re.match(r'^\d+\.\d+', line):  # "1.1 Section"
-            return 2
-        elif re.match(r'^\d+\.', line):  # "1. Section"
-            return 1
-        else:
-            return 1
-    
-    def _extract_requirements(self, structured_data: List[Dict]) -> List[str]:
-        """Extract requirements from structured content"""
-        requirements = []
-        requirement_keywords = ['shall', 'must', 'will', 'should', 'required to', 'needs to']
-        
-        for section in structured_data:
-            # Check section title for requirements
-            if any(keyword in section['title'].lower() for keyword in ['requirement', 'functional', 'specification']):
-                for line in section['content']:
-                    if any(keyword in line.lower() for keyword in requirement_keywords):
-                        requirements.append(line)
+    async def _extract_from_docx(self, file_path: str) -> str:
+        """Extract text from DOCX"""
+        try:
+            # ✅ First verify file exists and is accessible
+            if not os.path.exists(file_path):
+                raise Exception(f"File not found: {file_path}")
             
-            # Check content for requirement-like sentences
-            for line in section['content']:
-                if any(keyword in line.lower() for keyword in requirement_keywords) and len(line.split()) > 3:
-                    requirements.append(line)
-        
-        return list(set(requirements))  # Remove duplicates
+            # ✅ Check file size to ensure it's not empty/corrupt
+            file_size = os.path.getsize(file_path)
+            if file_size == 0:
+                raise Exception("File is empty or corrupted")
+            
+            # ✅ Verify it's actually a DOCX file
+            if not file_path.lower().endswith('.docx'):
+                raise Exception("File is not a DOCX document")
+            
+            # ✅ Use absolute path and ensure proper file permissions
+            absolute_path = os.path.abspath(file_path)
+            
+            doc = Document(absolute_path)
+            text = ""
+            for paragraph in doc.paragraphs:
+                if paragraph.text and paragraph.text.strip():
+                    text += paragraph.text + "\n"
+            
+            if not text.strip():
+                raise Exception("No extractable text found in DOCX document")
+                
+            return text.strip()
+            
+        except Exception as e:
+            raise Exception(f"DOCX extraction failed: {str(e)}")
+    
+    async def _extract_from_text(self, file_path: str) -> str:
+        """Extract text from TXT"""
+        encodings = ['utf-8', 'latin-1', 'windows-1252']
+        for encoding in encodings:
+            try:
+                async with aiofiles.open(file_path, 'r', encoding=encoding) as file:
+                    content = await file.read()
+                    if content.strip():
+                        return content
+            except UnicodeDecodeError:
+                continue
+        raise ValueError("Could not decode text file")
     
     def _extract_metadata(self, text: str, file_path: str) -> Dict:
-        """Extract metadata from document"""
+        """Extract comprehensive metadata from document"""
         words = text.split()
-        sentences = [s.strip() for s in text.split('.') if s.strip()]
+        sentences = [s.strip() for s in re.split(r'[.!?]+', text) if s.strip()]
         
         return {
             'file_path': file_path,
+            'file_size': os.path.getsize(file_path) if os.path.exists(file_path) else 0,
             'word_count': len(words),
             'sentence_count': len(sentences),
             'avg_sentence_length': sum(len(s.split()) for s in sentences) / len(sentences) if sentences else 0,
-            'requirement_keywords_found': self._count_requirement_keywords(text)
         }
-    
-    def _count_requirement_keywords(self, text: str) -> Dict[str, int]:
-        """Count occurrence of requirement-related keywords"""
-        keywords = {
-            'shall': 0, 'must': 0, 'will': 0, 'should': 0,
-            'required': 0, 'need': 0, 'requirement': 0
-        }
-        
-        text_lower = text.lower()
-        for keyword in keywords:
-            keywords[keyword] = text_lower.count(keyword)
-        
-        return keywords

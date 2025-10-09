@@ -3,11 +3,12 @@ import { useProjectStore } from '../../stores/useProjectStore'
 import { DocumentArrowUpIcon } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 import { useParams } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export const DocumentUpload = ({ }) => {
-  const { uploadDocument, loading } = useProjectStore()
+  const { uploadDocument, fetchDocuments } = useProjectStore()
   const { projectId } = useParams()
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     console.log('🔄 DocumentUpload projectId from useParams:', projectId)
@@ -27,11 +28,16 @@ export const DocumentUpload = ({ }) => {
       
       if (acceptedFiles.length > 0 && projectId) {
         try {
+          setLoading(true)
           console.log('🚀 Starting upload...')
           await uploadDocument(acceptedFiles[0], projectId)
           console.log('✅ Upload completed')
+          await fetchDocuments(projectId)
+          
         } catch (error) {
           console.error('❌ Upload failed:', error)
+        } finally {
+          setLoading(false)
         }
       } else {
         console.log('❌ No files or projectId missing')
