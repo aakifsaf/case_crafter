@@ -224,7 +224,7 @@ export const useProjectStore = create(
         const response = await testService.generateTestCases(documentId)
         const testSuite = response.data || response
         
-        // Find the project ID from documents to clear cache
+        // Find the document to get project ID
         const document = state.documents.find(doc => doc.id === documentId)
         if (document) {
           state.clearCache('testSuites', state.getCacheKey('testSuites', document.project_id))
@@ -327,7 +327,8 @@ export const useProjectStore = create(
         
         // Set default filename if not provided
         if (!downloadFilename) {
-          downloadFilename = `test-suite-${testSuiteId}.${format}`
+          const extension = format === "excel" ? "xlsx" : format;
+          downloadFilename = `test-suite-${testSuiteId}.${extension}`;
         }
         
         link.setAttribute('download', downloadFilename)

@@ -226,16 +226,16 @@ class SemanticRequirementAnalyzer:
         all_requirements = []
         
         # Strategy 1: Formal ID-based extraction
-        all_requirements.extend(self._extract_formal_requirements(text))
+        # all_requirements.extend(self._extract_formal_requirements(text))
         
         # Strategy 2: Numbered list extraction
         all_requirements.extend(self._extract_numbered_requirements(text))
         
         # Strategy 3: Section-based extraction
-        all_requirements.extend(self._extract_section_requirements(structure))
+        # all_requirements.extend(self._extract_section_requirements(structure))
         
         # Strategy 4: Pattern-based extraction
-        all_requirements.extend(self._extract_pattern_based_requirements(text))
+        # all_requirements.extend(self._extract_pattern_based_requirements(text))
         
         # Strategy 5: Semantic extraction (fallback)
         if len(all_requirements) < 5:  # If few requirements found

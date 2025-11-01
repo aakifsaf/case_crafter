@@ -9,23 +9,26 @@ from app.models.database import Document
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 import os
+from google import genai
+
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 load_dotenv()
 
 @dataclass
-class OpenRouterConfig:
-    api_key: str = os.getenv("API_KEY")
-    base_url: str = "https://openrouter.ai/api/v1"
-    model: str = "openai/gpt-3.5-turbo"
+class AIConfig:
+    api_key: str = os.getenv("GEMINI_API_KEY")
+    base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    model: str = "gemini-2.5-flash-lite"
 
 class AdvancedTestGenerator:
-    def __init__(self, db: Session, config: OpenRouterConfig = None):
-        self.config = config or OpenRouterConfig()
+    def __init__(self, db: Session, config: AIConfig = None):
+        self.config = config or AIConfig()
         self.template_manager = TestTemplateManager()
         self.db = db
         
     def generate_test_suite(self, requirements: List[Dict], document_id: int) -> Dict:
-        """Generate comprehensive test suite using DeepSeek model in a single API call"""
+        """Generate comprehensive test suite using ai model in a single API call"""
         try:
             document = self.db.query(Document).filter(Document.id == document_id).first()
             project_id = document.project_id if document else None
@@ -49,7 +52,7 @@ class AdvancedTestGenerator:
     def _generate_complete_test_suite_ai(self, requirements: List[Dict]) -> Dict:
         """Generate complete test suite in a single API call"""
         prompt = self._create_complete_test_suite_prompt(requirements)
-        response = self._call_deepseek(prompt)
+        response = self._call_ai(prompt)
         return json.loads(response)
     
     def _create_complete_test_suite_prompt(self, requirements: List[Dict]) -> str:
@@ -81,7 +84,7 @@ class AdvancedTestGenerator:
                     "priority": "high|medium|low",
                     "test_steps": ["step1", "step2", "step3"],
                     "expected_results": "clear expected outcome",
-                    "test_data": "data for testing",
+                    "test_data": "data for testing in json format",
                     "preconditions": ["precondition1", "precondition2"],
                     "ai_generated": true
                 }}
@@ -174,41 +177,59 @@ class AdvancedTestGenerator:
             'total_test_cases': len(test_cases)
         }
     
-    def _call_deepseek(self, prompt: str) -> str:
-        """Call DeepSeek model via OpenRouter API"""
+    def _call_ai(self, prompt: str) -> str:
+        """Call Google Gemini model via API"""
         headers = {
-            'Authorization': f'Bearer {self.config.api_key}',
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://github.com/your-repo',
-            'X-Title': 'AI Test Generator'
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.config.api_key}"
         }
-        
+
+        # Gemini uses `contents` instead of `messages`
         payload = {
-            'model': self.config.model,
-            'messages': [
+            "contents": [
                 {
-                    'role': 'system',
-                    'content': 'You are an expert QA engineer specializing in creating comprehensive test suites. Always respond with valid JSON. Generate complete test suites including test cases and integration scenarios in a single response.'
-                },
-                {
-                    'role': 'user',
-                    'content': prompt
+                    "parts": [
+                        {"text": (
+                            "You are an expert QA engineer specializing in creating comprehensive test suites. "
+                            "Always respond with valid JSON. "
+                            "Generate complete test suites including test cases and integration scenarios "
+                            "in a single response.\n\n"
+                            f"User prompt: {prompt}"
+                        )}
+                    ]
                 }
-            ],
-            'temperature': 0.3,
-            'response_format': {'type': 'json_object'}
+            ]
         }
-        
+
         try:
-            response = requests.post(
-                f"{self.config.base_url}/chat/completions",
-                headers=headers,
-                json=payload
+            # response = requests.post(
+            #     f"{self.config.base_url}/models/{self.config.model}:generateContent",
+            #     headers=headers,
+            #     json=payload
+            # )
+            # response.raise_for_status()
+
+            # data = response.json()
+            # # Gemini responses: candidates[0].content.parts[0].text
+            # return data["candidates"][0]["content"]["parts"][0]["text"]
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[  
+                        "You are an expert QA engineer specializing in creating comprehensive test suites. "
+                        "Always respond with valid JSON."
+                        "Generate complete test suites including test cases and integration scenarios "
+                        "in a single response.\n\n"
+                        f"User prompt: {prompt}"
+                    ],
+                    config={
+                        "response_mime_type": "application/json"
+                    },
             )
-            response.raise_for_status()
-            return response.json()['choices'][0]['message']['content']
+            print("Gemini API response received:", response.text)
+            return response.text
+
         except Exception as e:
-            print(f"DeepSeek API error: {e}")
+            print(f"Gemini API error: {e}")
             raise
     
     def _generate_fallback_test_suite(self, requirements: List[Dict]) -> Dict:
@@ -244,7 +265,7 @@ class AdvancedTestGenerator:
         cases.append({
             'id': current_id,
             'requirement_id': requirement['id'],
-            'name': f"Verify {requirement['original_text'][:50]}... - Positive",
+            'name': f"Verify {requirement['original_text']}",
             'description': f"Validate successful execution: {requirement['original_text']}",
             'test_type': 'positive',
             'priority': 'high',
@@ -265,7 +286,7 @@ class AdvancedTestGenerator:
         cases.append({
             'id': current_id,
             'requirement_id': requirement['id'],
-            'name': f"Verify {requirement['original_text'][:50]}... - Negative",
+            'name': f"Verify {requirement['original_text']}",
             'description': f"Test error handling: {requirement['original_text']}",
             'test_type': 'negative',
             'priority': 'medium',
@@ -286,7 +307,7 @@ class AdvancedTestGenerator:
         cases.append({
             'id': current_id,
             'requirement_id': requirement['id'],
-            'name': f"Verify {requirement['original_text'][:50]}... - Edge Case",
+            'name': f"Verify {requirement['original_text']}",
             'description': f"Test boundary conditions: {requirement['original_text']}",
             'test_type': 'edge',
             'priority': 'low',

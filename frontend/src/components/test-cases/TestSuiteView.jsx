@@ -60,34 +60,48 @@ export const TestSuiteView = ({ }) => {
   }, [location.pathname, projectId])
 
   // FIXED: Move useProjectStore.getState() inside the function
-  const handleGenerateAllTests = async () => {
-    console.log('🔄 Generate All Tests button clicked')
-    
-    // Get current documents from store (already destructured above)
-    const processedDocuments = documents.filter(doc => doc.status === 'processed'|| 'enhanced')
-    
-    if (processedDocuments.length === 0) {
-      alert('No processed documents found. Please upload and process documents first.')
-      return
-    }
-    setGeneratingTests(true)
-    console.log(`📄 Processing ${processedDocuments.length} documents`)
-    
+const handleGenerateAllTests = async () => {
+  console.log('🔄 Generate All Tests button clicked')
+  
+  // Get current documents from store - FIXED FILTER CONDITION
+  const processedDocuments = documents.filter(doc => 
+    doc.status === 'processed' || doc.status === 'enhanced'
+  )
+  
+  if (processedDocuments.length === 0) {
+    alert('No processed documents found. Please upload and process documents first.')
+    return
+  }
+  
+  setGeneratingTests(true)
+  console.log(`📄 Processing ${processedDocuments.length} documents`)
+  
+  try {
     for (const doc of processedDocuments) {
       try {
         console.log(`🚀 Generating tests for document: ${doc.filename}`)
         await generateTestCases(doc.id)
-        // Refresh test suite after generation
-        await fetchTestSuite(projectId)
         console.log(`✅ Successfully generated tests for ${doc.filename}`)
       } catch (error) {
         console.error(`❌ Failed to generate tests for document ${doc.id}:`, error)
         alert(`Failed to generate tests for ${doc.filename}. Please try again.`)
-      } finally {
-        setGeneratingTests(false)
+        // Continue with next document even if one fails
+        continue
       }
     }
+    
+    // Refresh test suite and traceability matrix AFTER all documents are processed
+    if (projectId) {
+      await fetchTestSuite(projectId)
+      await fetchTraceabilityMatrix(projectId)
+    }
+    
+  } catch (error) {
+    console.error('Error in generate all tests:', error)
+  } finally {
+    setGeneratingTests(false)
   }
+}
 
 
   const currentTestSuite = selectedTestSuite || testSuites[0]
