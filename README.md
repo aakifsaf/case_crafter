@@ -1,5 +1,6 @@
 # 🧪 Case Crafter – AI-Powered Test Case Generator
 ![Python](https://img.shields.io/badge/python-3.10+-green.svg)![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-yellow.svg)![React](https://img.shields.io/badge/React-18+-blue.svg)
+
 An intelligent system that automates test case generation from Business Requirements Documents (BRD) using AI and machine learning.
 ---
 ## 🌟 Features
@@ -85,6 +86,7 @@ case-crafter/
 ---
 ## 🔧 Configuration
 ### Environment Variables
+```bash
 DATABASE_URL=sqlite:///./test.db
 OPENROUTER_API_KEY=your_api_key_here
 SECRET_KEY=your_secret_key
@@ -92,10 +94,13 @@ DEBUG=True
 ALLOWED_ORIGINS=http://localhost:3000
 MAX_UPLOAD_SIZE=10485760
 UPLOAD_DIR=uploads
+```
 ### AI Models Configuration
+```bash
 FAST_MODEL = "google/gemini-flash-1.5"
 SMART_MODEL = "anthropic/claude-3-sonnet"
 QUALITY_MODEL = "deepseek/deepseek-coder"
+```
 
 ---
 ## 💻 Usage
@@ -131,7 +136,12 @@ QUALITY_MODEL = "deepseek/deepseek-coder"
 ```
 ---
 ## 📈 Performance
-Operation	Avg TimeUpload	2–5 secExtraction	3–10 secPer Test Gen	2–5 sec20 Req Suite	30–60 sec
+| Operation        | Avg Time   |
+|------------------|------------|
+| Upload           | 2–5 sec    |
+| Extraction       | 3–10 sec   |
+| Per Test Gen     | 2–5 sec    |
+| 20 Req Suite     | 30–60 sec  |
 ---
 ## 🔐 Security Features
 - File validation & malware scanning
